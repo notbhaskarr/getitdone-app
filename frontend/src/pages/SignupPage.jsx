@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { signup } from "../api/auth";
 import { useNavigate, Link } from "react-router-dom";
+import "./Auth.css";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -23,39 +24,38 @@ export default function SignupPage() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Signup</h2>
+    <div className="auth-wrapper">
+      <h2 className="auth-logo">GETitDONE</h2>
 
-      <input
-        placeholder="name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+      <div className="auth-card">
+        <input
+          className="auth-input"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-      <br />
+        <input
+          className="auth-input"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-      <input
-        placeholder="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <input
+          className="auth-input"
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-      <br />
+        <button className="auth-btn" onClick={handleSignup}>Join in</button>
 
-      <input
-        placeholder="password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      <br />
-
-      <button onClick={handleSignup}>Signup</button>
-
-      <p>
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
+        <p className="auth-link-text">
+          Already have an account? <Link to="/">Get in</Link>
+        </p>
+      </div>
     </div>
   );
 }

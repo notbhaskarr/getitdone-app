@@ -77,17 +77,18 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-wrapper">
       <div className="dashboard-header">
         <h2>GETitDONE</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', marginTop: '28px' }}>
-          {userName && <span style={{ fontFamily: 'var(--heading)', fontWeight: '500', color: 'var(--text-h)', opacity: 0.5, fontSize: '16px', lineHeight: '1', paddingRight: '16px' }}>{userName}</span>}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+          {userName && <span style={{ fontFamily: 'var(--heading)', fontWeight: '500', color: 'var(--text-h)', opacity: 0.8, fontSize: '14px', lineHeight: '1' }}>{userName}</span>}
           <button className="logout-btn" style={{ fontSize: '12px' }} onClick={handleLogout}>Log Out</button>
         </div>
       </div>
 
-      <form className="task-form" onSubmit={handleCreate}>
-        <input
+      <div className="dashboard-container">
+        <form className="task-form" onSubmit={handleCreate}>
+          <input
           className="task-input"
           placeholder="What needs to be done?"
           value={title}
@@ -125,6 +126,8 @@ export default function Dashboard() {
             </div>
           ))
         )}
+      </div>
+
       </div>
 
       {editingTask && (

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { login } from "../api/auth";
 import { useNavigate, Link } from "react-router-dom";
+import "./Auth.css";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,31 +23,31 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>GETitDONE</h2>
+    <div className="auth-wrapper">
+      <h2 className="auth-logo">GETitDONE</h2>
 
-      <input
-        placeholder="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+      <div className="auth-card">
+        <input
+          className="auth-input"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-      <br />
+        <input
+          className="auth-input"
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-      <input
-        placeholder="password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        <button className="auth-btn" onClick={handleLogin}>Get in</button>
 
-      <br />
-
-      <button onClick={handleLogin}>Login</button>
-
-      <p>
-        No account? <Link to="/signup">Signup</Link>
-      </p>
+        <p className="auth-link-text">
+          Don't have an account? <Link to="/signup">Join in</Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,10 @@
+.dashboard-wrapper {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
 .dashboard-container {
-  padding: 40px;
   max-width: 800px;
   margin: 0 auto;
   text-align: left;
@@ -8,8 +13,9 @@
 .dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 32px;
+  width: 100%;
 }
 
 .logout-btn {
@@ -17,13 +23,17 @@
   color: var(--text);
   border: 1px solid var(--border);
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .logout-btn:hover {
-  background: var(--border);
+  background: rgba(162, 178, 150, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: var(--text);
+  transform: translateY(-1px);
 }
 
 .task-form {
@@ -40,14 +50,16 @@
 
 .task-input {
   width: 100%;
-  padding: 12px 16px;
-  border-radius: 8px;
+  padding: 8px 20px;
+  border-radius: 9999px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: rgba(162, 178, 150, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: var(--text-h);
   font-family: var(--sans);
-  font-size: 16px;
-  transition: all 0.2s ease;
+  font-size: 14px;
+  transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
@@ -65,15 +77,19 @@
   border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: auto;
   align-self: center;
   margin-top: 8px;
+  font-size: 14px;
 }
 
 .task-submit-btn:hover {
-  background: var(--code-bg);
+  background: rgba(162, 178, 150, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-color: var(--text);
+  transform: translateY(-1px);
 }
 
 .task-list {
