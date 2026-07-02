@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from uuid import UUID
+from datetime import datetime
 
 from database import engine, get_db
 from models import Base, User, Task
@@ -184,6 +185,8 @@ def update_task(
 
     if update.is_completed is not None:
         task.is_completed = update.is_completed
+
+    task.updated_at = datetime.utcnow()
 
     db.commit()
     db.refresh(task)

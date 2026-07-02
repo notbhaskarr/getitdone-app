@@ -9,10 +9,12 @@ export default function Dashboard() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const [editingTask, setEditingTask] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [userName, setUserName] = useState("");
+
+  const [maximizedTask, setMaximizedTask] = useState(null);
+  const [isMacEditing, setIsMacEditing] = useState(false);
 
   const navigate = useNavigate();
 
@@ -55,20 +57,22 @@ export default function Dashboard() {
     setTasks(tasks.filter(t => t.id !== taskId));
   };
 
-  const openEditModal = (task) => {
-    setEditingTask(task);
-    setEditTitle(task.title);
-    setEditDesc(task.description || "");
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingTask) return;
-    const updated = await updateTask(editingTask.id, {
+  const handleMacSave = async () => {
+    if (!maximizedTask) return;
+    const updated = await updateTask(maximizedTask.id, {
       title: editTitle,
       description: editDesc
     });
-    setTasks(tasks.map(t => t.id === editingTask.id ? updated : t));
-    setEditingTask(null);
+    setTasks(tasks.map(t => t.id === maximizedTask.id ? updated : t));
+    setMaximizedTask(updated);
+    setIsMacEditing(false);
+  };
+
+  const handleMacDelete = async () => {
+    if (!maximizedTask) return;
+    await deleteTask(maximizedTask.id);
+    setTasks(tasks.filter(t => t.id !== maximizedTask.id));
+    setMaximizedTask(null);
   };
 
   const handleLogout = () => {
@@ -89,68 +93,132 @@ export default function Dashboard() {
       <div className="dashboard-container">
         <form className="task-form" onSubmit={handleCreate}>
           <input
-          className="task-input"
-          placeholder="What needs to be done?"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <input
-          className="task-input"
-          placeholder="Description (optional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <button type="submit" className="task-submit-btn">Add Task</button>
-      </form>
+            className="task-input"
+            placeholder="What's going on?"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <input
+            className="task-input"
+            placeholder="Thoughts and Details"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <button type="submit" className="task-submit-btn">Add the entry</button>
+        </form>
 
-      <div className="task-list">
-        {tasks.length === 0 ? (
-          <p style={{ textAlign: "center", color: "var(--text)" }}>No tasks yet. Create one above!</p>
-        ) : (
-          tasks.map(task => (
-            <div key={task.id} className={`task-card ${task.is_completed ? 'completed' : ''}`}>
-              <input
-                type="checkbox"
-                className="task-checkbox"
-                checked={task.is_completed}
-                onChange={() => handleToggleComplete(task)}
-              />
-              <div className="task-content">
-                <div className="task-title">{task.title}</div>
-                {task.description && <div className="task-desc">{task.description}</div>}
-              </div>
-              <div className="task-actions">
-                <button className="icon-btn edit" onClick={() => openEditModal(task)}>✎</button>
-                <button className="icon-btn delete" onClick={() => handleDelete(task.id)}>✖</button>
-              </div>
-            </div>
-          ))
-        )}
+        <div className="task-list">
+          {tasks.length === 0 ? (
+            <p style={{ textAlign: "center", color: "var(--text)" }}>No tasks yet. Create one above!</p>
+          ) : (
+            tasks.map((task, index) => {
+              const colors = [
+                "162, 178, 150", // sage
+                "224, 122, 95",  // dusty orange
+                "61, 90, 128",   // slate
+                "129, 178, 154", // mint
+                "242, 204, 143", // sandy
+                "212, 163, 115", // wood
+                "157, 129, 137"  // mauve
+              ];
+              const taskColorRGB = colors[index % colors.length];
+
+              return (
+                <div key={task.id} className={`task-card ${task.is_completed ? 'completed' : ''}`} style={{ '--task-color': taskColorRGB }}>
+                  <input
+                    type="checkbox"
+                    className="task-checkbox"
+                    checked={task.is_completed}
+                    onChange={() => handleToggleComplete(task)}
+                  />
+                  <div className="task-content" onClick={(e) => {
+                    console.log("Task clicked!", task);
+                    setMaximizedTask(task);
+                    setEditTitle(task.title);
+                    setEditDesc(task.description || "");
+                    setIsMacEditing(false);
+                  }} style={{ cursor: 'pointer' }}>
+                    <div className="task-title">{task.title}</div>
+                    {task.description && <div className="task-desc">{task.description}</div>}
+                  </div>
+                  <div className="task-actions">
+                    <button className="icon-btn delete" onClick={() => handleDelete(task.id)}>✖</button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
       </div>
+      {maximizedTask && (() => {
+        const colors = [
+          "162, 178, 150",
+          "224, 122, 95",
+          "61, 90, 128",
+          "129, 178, 154",
+          "242, 204, 143",
+          "212, 163, 115",
+          "157, 129, 137"
+        ];
+        const taskIndex = tasks.findIndex(t => t.id === maximizedTask.id);
+        const colorIndex = taskIndex !== -1 ? taskIndex : 0;
+        const taskColorRGB = colors[colorIndex % colors.length];
 
-      </div>
-
-      {editingTask && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Edit Task</h3>
-            <input
-              className="task-input"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-            />
-            <input
-              className="task-input"
-              value={editDesc}
-              onChange={(e) => setEditDesc(e.target.value)}
-            />
-            <div className="modal-actions">
-              <button className="btn-cancel" onClick={() => setEditingTask(null)}>Cancel</button>
-              <button className="btn-save" onClick={handleSaveEdit}>Save</button>
+        return (
+          <div className="mac-modal-overlay">
+            <div className="mac-modal fullscreen" style={{ '--task-color': taskColorRGB }}>
+              <div className="mac-header" style={{ justifyContent: 'space-between' }}>
+                <div className="mac-actions" style={{ display: 'flex', gap: '8px' }}>
+                  {isMacEditing ? (
+                    <button className="icon-btn edit" onClick={handleMacSave} title="Save">✓</button>
+                  ) : (
+                    <button className="icon-btn edit" onClick={() => setIsMacEditing(true)} title="Edit">✎</button>
+                  )}
+                </div>
+                <div className="mac-controls">
+                  <button className="mac-btn red" onClick={() => setMaximizedTask(null)} title="Close"></button>
+                </div>
+              </div>
+            <div className="mac-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{ flexGrow: 1 }}>
+                {isMacEditing ? (
+                  <>
+                    <input
+                      className="mac-title-input"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="Task Title"
+                    />
+                    <textarea
+                      className="mac-desc-input"
+                      value={editDesc}
+                      onChange={(e) => setEditDesc(e.target.value)}
+                      placeholder="Description (optional)"
+                      rows={5}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h1 className="mac-title">{maximizedTask.title}</h1>
+                    {maximizedTask.description ? (
+                      <p className="mac-desc">{maximizedTask.description}</p>
+                    ) : (
+                      <p className="mac-desc" style={{ opacity: 0.5 }}>No description provided.</p>
+                    )}
+                  </>
+                )}
+              </div>
+              
+              <div className="mac-meta" style={{ marginTop: 'auto', paddingTop: '32px', fontSize: '13px', opacity: 0.5, textAlign: 'right', fontFamily: 'var(--sans)' }}>
+                <div>Created on: {maximizedTask.created_at ? new Date(maximizedTask.created_at + 'Z').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown'}</div>
+                <div>Last Updated: {maximizedTask.updated_at ? new Date(maximizedTask.updated_at + 'Z').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown'}</div>
+              </div>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
