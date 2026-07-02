@@ -279,9 +279,13 @@
 }
 
 .mac-modal {
-  background: rgba(var(--task-color, 162, 178, 150), 0.15);
+  background: rgba(var(--task-color, 162, 178, 150), 0.25);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  /* Fallback for browsers that don't support backdrop-filter */
+  @supports not (backdrop-filter: blur(24px)) {
+    background: rgba(var(--task-color, 162, 178, 150), 0.85);
+  }
   border-radius: 12px;
   width: 100%;
   max-width: 600px;
