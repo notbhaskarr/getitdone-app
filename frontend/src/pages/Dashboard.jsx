@@ -96,14 +96,28 @@ export default function Dashboard() {
   };
 
   const handleToggleComplete = async (task) => {
+    // Prevent the creator from completing a task they assigned to someone else
+    if (task.assigned_to_id && task.user_id === currentUserId) {
+      alert("You cannot complete a task you assigned to someone else.");
+      return;
+    }
+
     const isNowCompleted = !task.is_completed;
     const reward = task.reward_luffies ?? 3;
+    
+    // Optimistic update
     setLuffies(prev => isNowCompleted ? prev + reward : Math.max(0, prev - reward));
 
-    const updated = await updateTask(task.id, { is_completed: isNowCompleted });
-    setTasks(tasks.map(t => (t.id === task.id ? updated : t)));
-    if (maximizedTask?.id === task.id) {
-      setMaximizedTask(updated);
+    try {
+      const updated = await updateTask(task.id, { is_completed: isNowCompleted });
+      setTasks(tasks.map(t => (t.id === task.id ? updated : t)));
+      if (maximizedTask?.id === task.id) {
+        setMaximizedTask(updated);
+      }
+    } catch (err) {
+      // Revert optimistic update on failure
+      setLuffies(prev => isNowCompleted ? Math.max(0, prev - reward) : prev + reward);
+      alert(err.response?.data?.detail || "Failed to update task");
     }
   };
 
@@ -257,6 +271,7 @@ export default function Dashboard() {
                       type="checkbox"
                       className="task-checkbox"
                       checked={task.is_completed}
+                      disabled={task.assigned_to_id && task.user_id === currentUserId}
                       onChange={() => handleToggleComplete(task)}
                     />
                     <div className="task-content" onClick={(e) => {
