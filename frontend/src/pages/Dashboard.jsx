@@ -38,6 +38,7 @@ export default function Dashboard() {
   const [maximizedTask, setMaximizedTask] = useState(null);
   const [isMacEditing, setIsMacEditing] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -101,6 +102,18 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-wrapper">
+      <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
+      <div className={`hidden-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <Calendar
+          tasks={tasks}
+          selectedDate={selectedDate}
+          onSelectDate={(date) => {
+            setSelectedDate(date);
+            setIsSidebarOpen(false);
+          }}
+        />
+      </div>
+
       <div className="dashboard-header">
         <h2>GETitDONE</h2>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
@@ -110,19 +123,6 @@ export default function Dashboard() {
       </div>
 
       <div className="dashboard-layout">
-        <div className="calendar-dropdown-container">
-          <div className="calendar-date-display">
-            {selectedDate ? selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : 'All Tasks'} ▾
-          </div>
-          <div className="calendar-dropdown-menu">
-            <Calendar
-              tasks={tasks}
-              selectedDate={selectedDate}
-              onSelectDate={setSelectedDate}
-            />
-          </div>
-        </div>
-
         <div className="dashboard-main">
           <div className="task-list">
             {(() => {
@@ -183,6 +183,10 @@ export default function Dashboard() {
       
       <button className="stealth-fab" onClick={() => setIsCreatingTask(true)} title="Add Task">
         +
+      </button>
+
+      <button className="stealth-fab left" onClick={() => setIsSidebarOpen(true)} title="Calendar">
+        📅
       </button>
 
       {maximizedTask && (() => {

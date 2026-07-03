@@ -43,48 +43,59 @@
   transform: translateY(-1px);
 }
 
-.calendar-dropdown-container {
-  position: relative;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 32px;
+.hidden-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 320px;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  box-shadow: 10px 0 30px rgba(0,0,0,0.05);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  padding: 24px;
+  overflow-y: auto;
 }
 
-.calendar-date-display {
-  font-family: var(--heading);
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--text-h);
-  cursor: pointer;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  user-select: none;
+.hidden-sidebar.open {
+  transform: translateX(0);
 }
 
-.calendar-date-display:hover {
-  background: rgba(162, 178, 150, 0.15);
-}
-
-.calendar-dropdown-menu {
-  position: absolute;
-  top: 100%;
-  margin-top: 8px;
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.2);
+  backdrop-filter: blur(2px);
+  z-index: 999;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 50;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
 }
 
-.calendar-dropdown-container:hover .calendar-dropdown-menu,
-.calendar-dropdown-container:focus-within .calendar-dropdown-menu {
+.sidebar-overlay.open {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+}
+
+.sidebar-toggle-btn {
+  background: transparent;
+  color: var(--text-h);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 13px;
+  font-weight: 500;
+}
+.sidebar-toggle-btn:hover {
+  background: rgba(162, 178, 150, 0.15);
+  border-color: var(--text);
 }
 
 .stealth-fab {
@@ -107,6 +118,11 @@
   opacity: 0.3;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
+}
+
+.stealth-fab.left {
+  right: auto;
+  left: 40px;
 }
 
 .stealth-fab:hover {
