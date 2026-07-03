@@ -378,9 +378,9 @@ export default function Dashboard() {
                           value={editAssigneeId} 
                           onChange={(e) => setEditAssigneeId(e.target.value)}
                         >
-                          <option value="">Assign to... (Optional)</option>
+                          <option value="">Assign the task</option>
                           {peers.filter(p => p.status === 'accepted').map(p => (
-                            <option key={p.peer_id} value={p.peer_id}>{p.peer_name}</option>
+                            <option key={p.peer_id} value={p.peer_id}>Assigned to : {p.peer_name}</option>
                           ))}
                         </select>
                       )}
@@ -439,9 +439,9 @@ export default function Dashboard() {
                   value={assigneeId} 
                   onChange={(e) => setAssigneeId(e.target.value)}
                 >
-                  <option value="">Assign to... (Optional)</option>
+                  <option value="">Assign the task</option>
                   {peers.filter(p => p.status === 'accepted').map(p => (
-                    <option key={p.peer_id} value={p.peer_id}>{p.peer_name}</option>
+                    <option key={p.peer_id} value={p.peer_id}>Assigned to : {p.peer_name}</option>
                   ))}
                 </select>
               </div>
