@@ -4,6 +4,24 @@ import { getUserProfile } from "../api/users";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 
+function timeAgo(dateString) {
+  if (!dateString) return "Unknown";
+  const date = new Date(dateString + 'Z');
+  const seconds = Math.floor((new Date() - date) / 1000);
+  
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " year ago" : " years ago");
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " month ago" : " months ago");
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " day ago" : " days ago");
+  interval = seconds / 3600;
+  if (interval >= 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " hour ago" : " hours ago");
+  interval = seconds / 60;
+  if (interval >= 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " minute ago" : " minutes ago");
+  return "just now";
+}
+
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
@@ -169,12 +187,15 @@ export default function Dashboard() {
           <div className="mac-modal-overlay">
             <div className="mac-modal fullscreen" style={{ '--task-color': taskColorRGB }}>
               <div className="mac-header" style={{ justifyContent: 'space-between' }}>
-                <div className="mac-actions" style={{ display: 'flex', gap: '8px' }}>
+                <div className="mac-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   {isMacEditing ? (
                     <button className="icon-btn edit" onClick={handleMacSave} title="Save">✓</button>
                   ) : (
                     <button className="icon-btn edit" onClick={() => setIsMacEditing(true)} title="Edit">✎</button>
                   )}
+                  <span style={{ fontSize: '13px', opacity: 0.5, fontFamily: 'var(--sans)', marginLeft: '4px' }}>
+                    Last modified {timeAgo(maximizedTask.updated_at)}
+                  </span>
                 </div>
                 <div className="mac-controls">
                   <button className="mac-btn red" onClick={() => setMaximizedTask(null)} title="Close"></button>
@@ -212,7 +233,6 @@ export default function Dashboard() {
               
               <div className="mac-meta" style={{ marginTop: 'auto', paddingTop: '32px', fontSize: '13px', opacity: 0.5, textAlign: 'right', fontFamily: 'var(--sans)' }}>
                 <div>Created on: {maximizedTask.created_at ? new Date(maximizedTask.created_at + 'Z').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown'}</div>
-                <div>Last Updated: {maximizedTask.updated_at ? new Date(maximizedTask.updated_at + 'Z').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown'}</div>
               </div>
             </div>
           </div>
