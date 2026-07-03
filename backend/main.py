@@ -330,7 +330,7 @@ def update_task(
     current_user: User = Depends(get_current_user)
 ):
 
-    task = db.query(Task).filter(
+    task = db.query(Task).with_for_update().filter(
         Task.id == task_id,
         or_(Task.user_id == current_user.id, Task.assigned_to_id == current_user.id)
     ).first()
@@ -344,7 +344,7 @@ def update_task(
 
     # 1. Handle Assignee Rejection
     if is_assignee and not is_owner and update_data.get("is_rejected"):
-        owner = db.query(User).filter(User.id == task.user_id).first()
+        owner = db.query(User).with_for_update().filter(User.id == task.user_id).first()
         if owner:
             owner.luffies += task.reward_luffies
         task.assigned_to_id = None
@@ -357,11 +357,12 @@ def update_task(
     # 2. Handle Assignee Updates (Can only toggle completion)
     if not is_owner:
         if "is_completed" in update_data and update_data["is_completed"] != task.is_completed:
+            db_current_user = db.query(User).with_for_update().filter(User.id == current_user.id).first()
             if update_data["is_completed"]:
-                current_user.luffies += task.reward_luffies
+                db_current_user.luffies += task.reward_luffies
                 db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="COMPLETED"))
             else:
-                current_user.luffies = max(0, current_user.luffies - task.reward_luffies)
+                db_current_user.luffies = max(0, db_current_user.luffies - task.reward_luffies)
                 # optionally log un-completed, but we'll stick to COMPLETED for now
             task.is_completed = update_data["is_completed"]
         task.updated_at = datetime.utcnow()
@@ -385,13 +386,15 @@ def update_task(
             
             # Assigning a previously unassigned task
             if task.assigned_to_id is None and new_assignee_id is not None:
-                if current_user.luffies < task.reward_luffies:
+                db_current_user = db.query(User).with_for_update().filter(User.id == current_user.id).first()
+                if db_current_user.luffies < task.reward_luffies:
                     raise HTTPException(status_code=400, detail="Not enough Whuffies to assign")
-                current_user.luffies -= task.reward_luffies
+                db_current_user.luffies -= task.reward_luffies
             
             # Revoking an assignment back to self
             elif task.assigned_to_id is not None and new_assignee_id is None:
-                current_user.luffies += task.reward_luffies
+                db_current_user = db.query(User).with_for_update().filter(User.id == current_user.id).first()
+                db_current_user.luffies += task.reward_luffies
                 db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="ASSIGNED", details="Assignment revoked"))
             
             task.assigned_to_id = new_assignee_id
@@ -451,7 +454,7 @@ def tip_task(
     if tip.amount <= 0:
         raise HTTPException(status_code=400, detail="Tip amount must be positive")
 
-    task = db.query(Task).filter(Task.id == task_id).first()
+    task = db.query(Task).with_for_update().filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
@@ -467,15 +470,16 @@ def tip_task(
     if getattr(task, 'tipped_amount', 0) > 0:
         raise HTTPException(status_code=400, detail="This task has already been tipped")
 
-    if current_user.luffies < tip.amount:
+    db_current_user = db.query(User).with_for_update().filter(User.id == current_user.id).first()
+    if db_current_user.luffies < tip.amount:
         raise HTTPException(status_code=400, detail="Not enough Whuffies to send this tip")
 
-    assignee = db.query(User).filter(User.id == task.assigned_to_id).first()
+    assignee = db.query(User).with_for_update().filter(User.id == task.assigned_to_id).first()
     if not assignee:
         raise HTTPException(status_code=404, detail="Assignee not found")
 
     # Perform tipping
-    current_user.luffies -= tip.amount
+    db_current_user.luffies -= tip.amount
     assignee.luffies += tip.amount
     task.tipped_amount = tip.amount
 
