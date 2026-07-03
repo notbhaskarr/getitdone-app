@@ -51,6 +51,7 @@ export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedActivity, setExpandedActivity] = useState(null);
   const [taskActivities, setTaskActivities] = useState({});
+  const [loadingTasks, setLoadingTasks] = useState(new Set());
 
   const navigate = useNavigate();
 
@@ -99,9 +100,13 @@ export default function Dashboard() {
   };
 
   const handleToggleComplete = async (task) => {
+    if (loadingTasks.has(task.id)) return;
+    setLoadingTasks(prev => new Set(prev).add(task.id));
+
     // Prevent the creator from completing a task they assigned to someone else
     if (task.assigned_to_id && task.user_id === currentUserId) {
       alert("You cannot complete a task you assigned to someone else.");
+      setLoadingTasks(prev => { const next = new Set(prev); next.delete(task.id); return next; });
       return;
     }
 
@@ -110,17 +115,21 @@ export default function Dashboard() {
     
     // Optimistic update
     setLuffies(prev => isNowCompleted ? prev + reward : Math.max(0, prev - reward));
+    setTasks(tasks.map(t => t.id === task.id ? { ...t, is_completed: isNowCompleted } : t));
 
     try {
       const updated = await updateTask(task.id, { is_completed: isNowCompleted });
-      setTasks(tasks.map(t => (t.id === task.id ? updated : t)));
+      setTasks(tasks => tasks.map(t => (t.id === task.id ? updated : t)));
       if (maximizedTask?.id === task.id) {
         setMaximizedTask(updated);
       }
     } catch (err) {
       // Revert optimistic update on failure
       setLuffies(prev => isNowCompleted ? Math.max(0, prev - reward) : prev + reward);
+      setTasks(tasks => tasks.map(t => t.id === task.id ? { ...t, is_completed: !isNowCompleted } : t));
       alert(err.response?.data?.detail || "Failed to update task");
+    } finally {
+      setLoadingTasks(prev => { const next = new Set(prev); next.delete(task.id); return next; });
     }
   };
 
@@ -165,6 +174,8 @@ export default function Dashboard() {
   };
 
   const handleTip = async (task) => {
+    if (loadingTasks.has(task.id)) return;
+
     const rawAmount = prompt("How many Whuffies would you like to tip?", "3");
     if (rawAmount === null) return;
     const amount = parseInt(rawAmount, 10);
@@ -172,9 +183,11 @@ export default function Dashboard() {
       alert("Please enter a valid positive number.");
       return;
     }
+
+    setLoadingTasks(prev => new Set(prev).add(task.id));
     try {
       const updated = await tipTask(task.id, amount);
-      setTasks(tasks.map(t => t.id === task.id ? updated : t));
+      setTasks(tasks => tasks.map(t => t.id === task.id ? updated : t));
       
       const u = await getUserProfile();
       setLuffies(u.luffies || 0);
@@ -185,7 +198,9 @@ export default function Dashboard() {
         setTaskActivities(prev => ({ ...prev, [task.id]: evts }));
       }
     } catch (err) {
-      alert(err.response?.data?.detail || "Failed to send tip");
+      alert(err.response?.data?.detail || "Failed to tip task");
+    } finally {
+      setLoadingTasks(prev => { const next = new Set(prev); next.delete(task.id); return next; });
     }
   };
 
@@ -316,7 +331,7 @@ export default function Dashboard() {
                       type="checkbox"
                       className="task-checkbox"
                       checked={task.is_completed}
-                      disabled={task.assigned_to_id && task.user_id === currentUserId}
+                      disabled={(task.assigned_to_id && task.user_id === currentUserId) || loadingTasks.has(task.id)}
                       onChange={() => handleToggleComplete(task)}
                     />
                     <div className="task-content" onClick={(e) => {
@@ -346,7 +361,7 @@ export default function Dashboard() {
                         </svg>
                       </button>
                       {task.user_id === currentUserId && task.assigned_to_id && task.is_completed && !task.tipped_amount && (
-                        <button className="icon-btn edit" onClick={() => handleTip(task)} title="Send Tip" style={{ color: '#af9f5d' }}>✦</button>
+                        <button className="icon-btn edit" onClick={() => handleTip(task)} title="Send Tip" style={{ color: '#af9f5d' }} disabled={loadingTasks.has(task.id)}>✦</button>
                       )}
                     </div>
                   </div>
