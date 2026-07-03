@@ -372,10 +372,10 @@ export default function Dashboard() {
                         rows={5}
                       />
                       {maximizedTask.user_id === currentUserId && (
-                        <select 
-                          className="mac-desc-input"
-                          style={{ marginTop: '16px', background: 'transparent', borderBottom: '1px solid var(--border)', fontSize: '14px', cursor: 'pointer', paddingBottom: '8px' }}
-                          value={editAssigneeId} 
+                            <select 
+                              className="mac-desc-input"
+                              style={{ marginTop: '16px', background: 'transparent', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', cursor: 'pointer', paddingBottom: '8px' }}
+                              value={editAssigneeId} 
                           onChange={(e) => setEditAssigneeId(e.target.value)}
                         >
                           <option value="">Assign the task</option>
@@ -435,7 +435,7 @@ export default function Dashboard() {
                 />
                 <select 
                   className="mac-desc-input"
-                  style={{ marginTop: '16px', background: 'transparent', borderBottom: '1px solid var(--border)', fontSize: '14px', cursor: 'pointer', paddingBottom: '8px' }}
+                  style={{ marginTop: '16px', background: 'transparent', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', cursor: 'pointer', paddingBottom: '8px' }}
                   value={assigneeId} 
                   onChange={(e) => setAssigneeId(e.target.value)}
                 >
