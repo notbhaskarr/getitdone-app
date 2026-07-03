@@ -66,7 +66,7 @@ export default function SignupPage() {
         </p>
       </div>
 
-      <div className="auth-footer">Built by slick</div>
+      <div className="auth-footer">slick .</div>
     </div>
   );
 }

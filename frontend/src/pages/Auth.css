@@ -3,7 +3,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-top: 25vh; /* Pushed further down */
+  padding-top: 25vh;
+  /* Pushed further down */
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
@@ -92,7 +93,8 @@
 
 .auth-link-text {
   text-align: center;
-  margin-top: 4px; /* Decreased distance to the button above */
+  margin-top: 4px;
+  /* Decreased distance to the button above */
   font-size: 14px;
   color: var(--text);
 }
@@ -105,4 +107,14 @@
 
 .auth-link-text a:hover {
   text-decoration: underline;
+}
+
+.auth-footer {
+  position: absolute;
+  bottom: 24px;
+  font-size: 11px;
+  color: var(--text);
+  opacity: 0.3;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
