@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getTasks, createTask, updateTask, deleteTask } from "../api/tasks";
 import { getUserProfile } from "../api/users";
 import { useNavigate } from "react-router-dom";
+import Calendar from "../components/Calendar";
 import "./Dashboard.css";
 
 function timeAgo(dateString) {
@@ -30,6 +31,8 @@ export default function Dashboard() {
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [userName, setUserName] = useState("");
+
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const [maximizedTask, setMaximizedTask] = useState(null);
   const [isMacEditing, setIsMacEditing] = useState(false);
@@ -108,29 +111,50 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="dashboard-container">
-        <form className="task-form" onSubmit={handleCreate}>
-          <input
-            className="task-input"
-            placeholder="What's going on?"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+      <div className="dashboard-layout">
+        <div className="dashboard-sidebar">
+          <Calendar 
+            tasks={tasks}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
           />
-          <input
-            className="task-input"
-            placeholder="Thoughts and Details"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <button type="submit" className="task-submit-btn">Add the entry</button>
-        </form>
+        </div>
 
-        <div className="task-list">
-          {tasks.length === 0 ? (
-            <p style={{ textAlign: "center", color: "var(--text)" }}>No tasks yet. Create one above!</p>
-          ) : (
-            tasks.map((task, index) => {
-              const colors = [
+        <div className="dashboard-main">
+          <form className="task-form" onSubmit={handleCreate}>
+            <input
+              className="task-input"
+              placeholder="What's going on?"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            <input
+              className="task-input"
+              placeholder="Thoughts and Details"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <button type="submit" className="task-submit-btn">Add the entry</button>
+          </form>
+
+          <div className="task-list">
+            {(() => {
+              const filteredTasks = selectedDate 
+                ? tasks.filter(task => {
+                    if (!task.created_at) return false;
+                    const d1 = new Date(task.created_at + 'Z');
+                    return d1.getFullYear() === selectedDate.getFullYear() &&
+                           d1.getMonth() === selectedDate.getMonth() &&
+                           d1.getDate() === selectedDate.getDate();
+                  })
+                : tasks;
+
+              if (filteredTasks.length === 0) {
+                return <p style={{ textAlign: "center", color: "var(--text)" }}>{selectedDate ? "No tasks for this date." : "No tasks yet. Create one above!"}</p>;
+              }
+
+              return filteredTasks.map((task, index) => {
+                const colors = [
                 "162, 178, 150", // sage
                 "224, 122, 95",  // dusty orange
                 "61, 90, 128",   // slate
@@ -164,10 +188,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
-
+      </div>
       </div>
       {maximizedTask && (() => {
         const colors = [
