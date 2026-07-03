@@ -59,6 +59,8 @@ class Task(Base):
     assigned_to_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     events = relationship("TaskEvent", back_populates="task", cascade="all, delete-orphan", order_by="TaskEvent.created_at")
+    user = relationship("User", back_populates="tasks", foreign_keys=[user_id])
+    assignee = relationship("User", back_populates="assigned_tasks", foreign_keys=[assigned_to_id])
 
 # -------------------
 # TASK EVENT MODEL
@@ -75,6 +77,3 @@ class TaskEvent(Base):
 
     task = relationship("Task", back_populates="events")
     user = relationship("User")
-
-    user = relationship("User", back_populates="tasks", foreign_keys=[user_id])
-    assignee = relationship("User", back_populates="assigned_tasks", foreign_keys=[assigned_to_id])
