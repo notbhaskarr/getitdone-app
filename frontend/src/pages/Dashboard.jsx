@@ -77,7 +77,7 @@ export default function Dashboard() {
   const handleToggleComplete = async (task) => {
     const isNowCompleted = !task.is_completed;
     const reward = task.reward_luffies ?? 3;
-    setLuffies(prev => isNowCompleted ? prev + reward : prev - reward);
+    setLuffies(prev => isNowCompleted ? prev + reward : Math.max(0, prev - reward));
 
     const updated = await updateTask(task.id, { is_completed: isNowCompleted });
     setTasks(tasks.map(t => (t.id === task.id ? updated : t)));

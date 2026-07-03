@@ -196,7 +196,7 @@ def update_task(
             if update.is_completed:
                 current_user.luffies += task.reward_luffies
             else:
-                current_user.luffies -= task.reward_luffies
+                current_user.luffies = max(0, current_user.luffies - task.reward_luffies)
         task.is_completed = update.is_completed
 
     task.updated_at = datetime.utcnow()
