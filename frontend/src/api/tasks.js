@@ -20,7 +20,7 @@ export const getTasks = async () => {
 // -------------------------
 // CREATE TASK (JWT REQUIRED)
 // -------------------------
-export const createTask = async (title, description) => {
+export const createTask = async (title, description, assigned_to_id) => {
   const token = localStorage.getItem("token");
 
   const res = await axios.post(
@@ -28,6 +28,7 @@ export const createTask = async (title, description) => {
     {
       title,
       description,
+      assigned_to_id
     },
     {
       headers: {

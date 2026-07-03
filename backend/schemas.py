@@ -33,16 +33,32 @@ class Token(BaseModel):
 
 
 # -------------------
+# PEER SCHEMAS
+# -------------------
+class PeerRequestCreate(BaseModel):
+    email: str
+
+class PeerConnectionRead(BaseModel):
+    id: UUID
+    requester_id: UUID
+    receiver_id: UUID
+    status: str
+    created_at: datetime
+    # We will include basic user info of the peer in the endpoint response directly.
+
+# -------------------
 # TASK SCHEMAS
 # -------------------
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
     reward_luffies: Optional[int] = 3
-
+    assigned_to_id: Optional[UUID] = None
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     is_completed: Optional[bool] = None
     reward_luffies: Optional[int] = None
+    assigned_to_id: Optional[UUID] = None
+    is_rejected: Optional[bool] = False
