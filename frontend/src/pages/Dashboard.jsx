@@ -189,7 +189,7 @@ export default function Dashboard() {
               <div className="mac-header" style={{ justifyContent: 'space-between' }}>
                 <div className="mac-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   {isMacEditing ? (
-                    <button className="icon-btn edit" onClick={handleMacSave} title="Save">✓</button>
+                    <button className="icon-btn edit" style={{ width: 'auto', padding: '0 12px', fontSize: '14px', fontWeight: 500 }} onClick={handleMacSave} title="Save">Save</button>
                   ) : (
                     <>
                       <button className="icon-btn edit" onClick={() => setIsMacEditing(true)} title="Edit">✎</button>
