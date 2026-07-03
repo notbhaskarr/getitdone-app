@@ -99,6 +99,27 @@
   visibility: visible;
 }
 
+.logout-icon-btn {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.logout-icon-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--text);
+  opacity: 1;
+  color: var(--accent);
+}
+
 .sidebar-toggle-btn {
   background: transparent;
   color: var(--text-h);
