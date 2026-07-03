@@ -397,6 +397,49 @@
   margin: 0;
 }
 
+.mac-desc p {
+  margin-bottom: 12px;
+}
+
+.mac-desc p:last-child {
+  margin-bottom: 0;
+}
+
+.mac-desc ul, .mac-desc ol {
+  margin: 12px 0 12px 24px;
+  padding: 0;
+}
+
+.mac-desc li {
+  margin-bottom: 6px;
+}
+
+.mac-desc strong {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.mac-desc a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+}
+
+.mac-desc code {
+  font-family: var(--code);
+  background: rgba(0,0,0,0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.mac-desc pre code {
+  display: block;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
 .mac-title-input {
   font-family: var(--heading);
   font-size: 32px;

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getTasks, createTask, updateTask, deleteTask } from "../api/tasks";
 import { getUserProfile } from "../api/users";
 import { useNavigate } from "react-router-dom";
+import ReactMarkdown from 'react-markdown';
 import Calendar from "../components/Calendar";
 import "./Dashboard.css";
 
@@ -249,7 +250,7 @@ export default function Dashboard() {
                   <>
                     <h1 className="mac-title">{maximizedTask.title}</h1>
                     {maximizedTask.description ? (
-                      <p className="mac-desc">{maximizedTask.description}</p>
+                      <ReactMarkdown className="mac-desc">{maximizedTask.description}</ReactMarkdown>
                     ) : (
                       <p className="mac-desc" style={{ opacity: 0.5 }}>No description provided.</p>
                     )}
