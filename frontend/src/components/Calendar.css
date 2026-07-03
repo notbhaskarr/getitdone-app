@@ -1,0 +1,115 @@
+.calendar-widget {
+  background: #eee8d5;
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+  max-width: 224px;
+  margin: 24px auto 0 auto;
+  box-sizing: border-box;
+  font-family: var(--sans);
+  color: var(--text-h);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.calendar-title {
+  font-family: var(--heading);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.calendar-nav {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--text);
+  transition: color 0.2s;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.calendar-nav:hover {
+  color: var(--text-h);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+  justify-items: center;
+}
+
+.calendar-weekday {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 4px;
+  opacity: 0.7;
+}
+
+.calendar-day {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.calendar-day:not(.empty):hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.calendar-day.selected {
+  background: #b3a463;
+  color: #000000;
+}
+
+.calendar-day.empty {
+  cursor: default;
+}
+
+.calendar-dot {
+  width: 4px;
+  height: 4px;
+  background-color: var(--accent);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 2px;
+}
+
+.calendar-day.selected .calendar-dot {
+  background-color: #eee8d5;
+}
+
+.calendar-clear {
+  margin-top: 12px;
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text);
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.calendar-clear:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-h);
+}
