@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getTasks, createTask, updateTask, deleteTask } from "../api/tasks";
+import { getTasks, createTask, updateTask, deleteTask, tipTask } from "../api/tasks";
 import { getUserProfile } from "../api/users";
 import { getPeers, requestPeer, acceptPeer } from "../api/peers";
 import { useNavigate } from "react-router-dom";
@@ -162,6 +162,25 @@ export default function Dashboard() {
     navigate("/");
   };
 
+  const handleTip = async (task) => {
+    const rawAmount = prompt("How many Whuffies would you like to tip?", "3");
+    if (rawAmount === null) return;
+    const amount = parseInt(rawAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      alert("Please enter a valid positive number.");
+      return;
+    }
+    try {
+      const updated = await tipTask(task.id, amount);
+      setTasks(tasks.map(t => t.id === task.id ? updated : t));
+      
+      const u = await getUserProfile();
+      setLuffies(u.luffies || 0);
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to send tip");
+    }
+  };
+
   const handlePeerRequest = async (e) => {
     e.preventDefault();
     if (!peerEmail.trim()) return;
@@ -300,7 +319,12 @@ export default function Dashboard() {
                       {task.user_id !== currentUserId ? (
                         <button className="icon-btn delete" onClick={() => handleReject(task.id)} title="Reject">✕</button>
                       ) : (
-                        <button className="icon-btn delete" onClick={() => handleDelete(task.id)} title="Delete">✖</button>
+                        <>
+                          {task.assigned_to_id && task.is_completed && !task.tipped_amount && (
+                            <button className="icon-btn edit" onClick={() => handleTip(task)} title="Send Tip" style={{ color: '#af9f5d' }}>✦</button>
+                          )}
+                          <button className="icon-btn delete" onClick={() => handleDelete(task.id)} title="Delete">✖</button>
+                        </>
                       )}
                     </div>
                   </div>

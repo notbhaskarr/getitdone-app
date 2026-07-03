@@ -7,7 +7,7 @@ from datetime import datetime
 from database import engine, get_db
 from models import Base, User, Task, PeerConnection
 
-from schemas import UserCreate, UserLogin, TaskCreate, TaskUpdate, Token, PeerRequestCreate
+from schemas import UserCreate, UserLogin, TaskCreate, TaskUpdate, Token, PeerRequestCreate, TaskTipRequest
 from auth import hash_password, verify_password, create_access_token, decode_token
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -347,4 +347,49 @@ def delete_task(
     db.delete(task)
     db.commit()
 
-    return {"message": "Task deleted"}
+    return {"detail": "Task deleted successfully"}
+
+# =========================
+# TASK: TIP
+# =========================
+@app.post("/tasks/{task_id}/tip")
+def tip_task(
+    task_id: UUID,
+    tip: TaskTipRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if tip.amount <= 0:
+        raise HTTPException(status_code=400, detail="Tip amount must be positive")
+
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if task.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only tip on tasks you created")
+
+    if not task.assigned_to_id or task.assigned_to_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You can only tip peers on assigned tasks")
+
+    if not task.is_completed:
+        raise HTTPException(status_code=400, detail="You can only tip on completed tasks")
+
+    if getattr(task, 'tipped_amount', 0) > 0:
+        raise HTTPException(status_code=400, detail="This task has already been tipped")
+
+    if current_user.luffies < tip.amount:
+        raise HTTPException(status_code=400, detail="Not enough Whuffies to send this tip")
+
+    assignee = db.query(User).filter(User.id == task.assigned_to_id).first()
+    if not assignee:
+        raise HTTPException(status_code=404, detail="Assignee not found")
+
+    # Perform tipping
+    current_user.luffies -= tip.amount
+    assignee.luffies += tip.amount
+    task.tipped_amount = tip.amount
+
+    db.commit()
+    db.refresh(task)
+    return task

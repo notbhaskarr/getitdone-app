@@ -73,3 +73,22 @@ export const deleteTask = async (taskId) => {
 
   return res.data;
 };
+
+// -------------------------
+// TIP TASK (JWT REQUIRED)
+// -------------------------
+export const tipTask = async (taskId, amount) => {
+  const token = localStorage.getItem("token");
+
+  const res = await axios.post(
+    `${BASE_URL}/tasks/${taskId}/tip`,
+    { amount },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return res.data;
+};

@@ -46,13 +46,12 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
     title = Column(String(255), nullable=False)
-    description = Column(Text)
-
+    description = Column(Text, nullable=True)
     is_completed = Column(Boolean, default=False)
+    is_rejected = Column(Boolean, default=False)
     reward_luffies = Column(Integer, default=3)
-
+    tipped_amount = Column(Integer, default=0)
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
     updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
 

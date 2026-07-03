@@ -62,3 +62,6 @@ class TaskUpdate(BaseModel):
     reward_luffies: Optional[int] = None
     assigned_to_id: Optional[UUID] = None
     is_rejected: Optional[bool] = False
+
+class TaskTipRequest(BaseModel):
+    amount: int
