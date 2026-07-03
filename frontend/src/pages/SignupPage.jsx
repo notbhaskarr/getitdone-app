@@ -65,6 +65,8 @@ export default function SignupPage() {
           Already have an account? <Link to="/">Get in</Link>
         </p>
       </div>
+
+      <div className="auth-footer">Built by slick</div>
     </div>
   );
 }
