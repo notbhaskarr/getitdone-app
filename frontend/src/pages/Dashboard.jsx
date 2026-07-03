@@ -110,12 +110,17 @@ export default function Dashboard() {
       </div>
 
       <div className="dashboard-layout">
-        <div className="dashboard-sidebar">
-          <Calendar
-            tasks={tasks}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-          />
+        <div className="calendar-dropdown-container">
+          <div className="calendar-date-display">
+            {selectedDate ? selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : 'All Tasks'} ▾
+          </div>
+          <div className="calendar-dropdown-menu">
+            <Calendar
+              tasks={tasks}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
+          </div>
         </div>
 
         <div className="dashboard-main">
@@ -174,12 +179,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="dashboard-right-sidebar">
-          <button className="new-task-btn" onClick={() => setIsCreatingTask(true)}>
-            + Add New Entry
-          </button>
-        </div>
       </div>
+      
+      <button className="stealth-fab" onClick={() => setIsCreatingTask(true)} title="Add Task">
+        +
+      </button>
 
       {maximizedTask && (() => {
         const colors = [
@@ -271,14 +275,14 @@ export default function Dashboard() {
                   className="mac-title-input"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Task Title"
+                  placeholder="What's going on?"
                   autoFocus
                 />
                 <textarea
                   className="mac-desc-input"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Description (optional)"
+                  placeholder="Description and Details"
                   rows={5}
                 />
               </div>
