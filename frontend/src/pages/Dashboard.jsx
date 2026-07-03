@@ -549,7 +549,7 @@ export default function Dashboard() {
       )}
       {expandedActivity && (
         <div className="mac-modal-overlay">
-          <div className="mac-modal" style={{ '--task-color': '200, 200, 200', width: '500px', height: 'auto', minHeight: '300px' }}>
+          <div className="mac-modal" style={{ '--task-color': '253, 246, 227', width: '500px', height: 'auto', minHeight: '300px' }}>
             <div className="mac-header" style={{ justifyContent: 'space-between' }}>
               <h2 className="mac-title" style={{ fontSize: '16px', margin: 0 }}>Activity History</h2>
               <div className="mac-controls">
