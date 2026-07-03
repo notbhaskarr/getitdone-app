@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [peers, setPeers] = useState([]);
   const [isNetworkModalOpen, setIsNetworkModalOpen] = useState(false);
   const [peerEmail, setPeerEmail] = useState("");
+  const [requestBtnText, setRequestBtnText] = useState("Request");
 
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -167,7 +168,8 @@ export default function Dashboard() {
     try {
       await requestPeer(peerEmail);
       setPeerEmail("");
-      alert("Request sent!");
+      setRequestBtnText("Sent");
+      setTimeout(() => setRequestBtnText("Request"), 3000);
       const p = await getPeers();
       setPeers(p);
     } catch (err) {
@@ -465,7 +467,7 @@ export default function Dashboard() {
                   placeholder="Peer email address"
                   style={{ flexGrow: 1, padding: '8px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)' }}
                 />
-                <button type="submit" className="icon-btn edit" style={{ padding: '0 12px', fontSize: '12px' }}>Request</button>
+                <button type="submit" className="icon-btn edit" style={{ padding: '0 12px', fontSize: '12px' }}>{requestBtnText}</button>
               </form>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
