@@ -252,7 +252,7 @@ export default function Dashboard() {
                 : tasks;
 
               if (filteredTasks.length === 0) {
-                return <p style={{ textAlign: "center", color: "var(--text)" }}>{selectedDate ? "No tasks for this date." : "No tasks yet. Create one above!"}</p>;
+                return <p style={{ textAlign: "center", color: "var(--text)" }}>{selectedDate ? "No tasks for this date." : "No tasks yet. Create one!"}</p>;
               }
 
               return filteredTasks.map((task, index) => {
