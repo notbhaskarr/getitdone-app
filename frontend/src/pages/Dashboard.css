@@ -70,40 +70,15 @@
   transform: translateY(-1px);
 }
 
-.task-form {
-  background: var(--code-bg);
-  padding: 24px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  margin-bottom: 40px;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.task-input {
+.dashboard-right-sidebar {
+  justify-self: end;
   width: 100%;
-  padding: 8px 20px;
-  border-radius: 9999px;
-  border: 1px solid var(--border);
-  background: rgba(162, 178, 150, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: var(--text-h);
-  font-family: var(--sans);
-  font-size: 14px;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
 }
 
-.task-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-bg);
-}
-
-.task-submit-btn {
+.new-task-btn {
   background: transparent;
   color: var(--text-h);
   border: 1px solid var(--border);
@@ -112,13 +87,11 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  width: auto;
-  align-self: center;
-  margin-top: 8px;
   font-size: 14px;
+  white-space: nowrap;
 }
 
-.task-submit-btn:hover {
+.new-task-btn:hover {
   background: rgba(162, 178, 150, 0.15);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

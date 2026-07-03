@@ -37,6 +37,7 @@ export default function Dashboard() {
 
   const [maximizedTask, setMaximizedTask] = useState(null);
   const [isMacEditing, setIsMacEditing] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   const navigate = useNavigate();
 
@@ -60,13 +61,14 @@ export default function Dashboard() {
   }, []);
 
   const handleCreate = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!title.trim()) return;
 
     const newTask = await createTask(title, description);
     setTasks([...tasks, newTask]);
     setTitle("");
     setDescription("");
+    setIsCreatingTask(false);
   };
 
   const handleToggleComplete = async (task) => {
@@ -122,22 +124,6 @@ export default function Dashboard() {
         </div>
 
         <div className="dashboard-main">
-          <form className="task-form" onSubmit={handleCreate}>
-            <input
-              className="task-input"
-              placeholder="What's going on?"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <input
-              className="task-input"
-              placeholder="Thoughts and Details"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            <button type="submit" className="task-submit-btn">Add the entry</button>
-          </form>
-
           <div className="task-list">
             {(() => {
               const filteredTasks = selectedDate 
@@ -266,6 +252,46 @@ export default function Dashboard() {
         </div>
         );
       })()}
+      </div>
+
+      <div className="dashboard-right-sidebar">
+        <button className="new-task-btn" onClick={() => setIsCreatingTask(true)}>
+          + Add Task
+        </button>
+      </div>
     </div>
-  );
+
+    {isCreatingTask && (
+      <div className="mac-modal-overlay">
+        <div className="mac-modal fullscreen" style={{ '--task-color': '162, 178, 150' }}>
+          <div className="mac-header" style={{ justifyContent: 'space-between' }}>
+            <div className="mac-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button className="icon-btn edit" style={{ width: 'auto', padding: '0 12px', fontSize: '14px', fontWeight: 500 }} onClick={handleCreate} title="Save">Save</button>
+            </div>
+            <div className="mac-controls">
+              <button className="mac-btn red" onClick={() => setIsCreatingTask(false)} title="Close"></button>
+            </div>
+          </div>
+          <div className="mac-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div style={{ flexGrow: 1 }}>
+              <input
+                className="mac-title-input"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Task Title"
+                autoFocus
+              />
+              <textarea
+                className="mac-desc-input"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Description (optional)"
+                rows={5}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>);
 }
