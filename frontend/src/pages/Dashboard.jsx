@@ -340,7 +340,11 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="task-actions">
-                      <button className="icon-btn activity" onClick={() => toggleActivity(task.id)} title="Activity History">🕒</button>
+                      <button className="icon-btn activity" onClick={() => toggleActivity(task.id)} title="Activity History">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', opacity: 0.7 }}>
+                          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                      </button>
                       {task.user_id !== currentUserId ? (
                         <button className="icon-btn delete" onClick={() => handleReject(task.id)} title="Reject">✕</button>
                       ) : (
