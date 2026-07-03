@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Text, ForeignKey, TIMESTAMP
+from sqlalchemy import Column, String, Boolean, Text, ForeignKey, TIMESTAMP, Integer, Date
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
@@ -16,6 +16,8 @@ class User(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(255), nullable=False, unique=True)
     password_hash = Column(String(255), nullable=False)
+    luffies = Column(Integer, default=10)
+    last_login_date = Column(Date, nullable=True)
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
 
     tasks = relationship("Task", back_populates="user", cascade="all, delete")
@@ -33,6 +35,7 @@ class Task(Base):
     description = Column(Text)
 
     is_completed = Column(Boolean, default=False)
+    reward_luffies = Column(Integer, default=3)
 
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
     updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -12,6 +12,16 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserRead(BaseModel):
+    id: UUID
+    name: str
+    email: str
+    luffies: int
+    
+    class Config:
+        from_attributes = True
+
+
 class UserLogin(BaseModel):
     email: str
     password: str
@@ -28,9 +38,11 @@ class Token(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
+    reward_luffies: Optional[int] = 3
 
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     is_completed: Optional[bool] = None
+    reward_luffies: Optional[int] = None

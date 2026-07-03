@@ -32,6 +32,7 @@ export default function Dashboard() {
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [userName, setUserName] = useState("");
+  const [luffies, setLuffies] = useState(0);
 
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -50,6 +51,7 @@ export default function Dashboard() {
       ]);
       setTasks(tasksData);
       setUserName(userData.name);
+      setLuffies(userData.luffies || 0);
     } catch (error) {
       if (error.response?.status === 401) {
         navigate("/");
@@ -73,7 +75,11 @@ export default function Dashboard() {
   };
 
   const handleToggleComplete = async (task) => {
-    const updated = await updateTask(task.id, { is_completed: !task.is_completed });
+    const isNowCompleted = !task.is_completed;
+    const reward = task.reward_luffies ?? 3;
+    setLuffies(prev => isNowCompleted ? prev + reward : prev - reward);
+
+    const updated = await updateTask(task.id, { is_completed: isNowCompleted });
     setTasks(tasks.map(t => (t.id === task.id ? updated : t)));
     if (maximizedTask?.id === task.id) {
       setMaximizedTask(updated);
@@ -127,6 +133,9 @@ export default function Dashboard() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
           {userName && <span style={{ fontFamily: 'var(--heading)', fontWeight: '500', color: 'var(--text-h)', opacity: 0.8, fontSize: '14px', lineHeight: '1' }}>{userName}</span>}
+          <span style={{ fontFamily: 'monospace', fontSize: '10px', fontWeight: '600', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.5, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+            ✦ {luffies} Whuffies
+          </span>
           <button className="logout-btn" style={{ fontSize: '12px' }} onClick={handleLogout}>Log Out</button>
         </div>
       </div>
@@ -189,7 +198,7 @@ export default function Dashboard() {
         </div>
 
       </div>
-      
+
       <button className="stealth-fab" onClick={() => setIsCreatingTask(true)} title="Add Task">
         +
       </button>

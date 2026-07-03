@@ -81,6 +81,12 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     if not verify_password(user.password, db_user.password_hash):
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
+    today = datetime.utcnow().date()
+    if db_user.last_login_date is None or db_user.last_login_date < today:
+        db_user.luffies += 2
+        db_user.last_login_date = today
+        db.commit()
+
     token = create_access_token({"user_id": str(db_user.id)})
 
     return {"access_token": token}
@@ -119,7 +125,8 @@ def get_user_profile(current_user: User = Depends(get_current_user)):
     return {
         "id": current_user.id,
         "name": current_user.name,
-        "email": current_user.email
+        "email": current_user.email,
+        "luffies": current_user.luffies
     }
 
 
@@ -136,6 +143,7 @@ def create_task(
     new_task = Task(
         title=task.title,
         description=task.description,
+        reward_luffies=task.reward_luffies,
         user_id=current_user.id
     )
 
@@ -184,6 +192,11 @@ def update_task(
         task.description = update.description
 
     if update.is_completed is not None:
+        if update.is_completed != task.is_completed:
+            if update.is_completed:
+                current_user.luffies += task.reward_luffies
+            else:
+                current_user.luffies -= task.reward_luffies
         task.is_completed = update.is_completed
 
     task.updated_at = datetime.utcnow()
