@@ -5,7 +5,7 @@ from uuid import UUID
 from datetime import datetime
 
 from database import engine, get_db
-from models import Base, User, Task, PeerConnection
+from models import Base, User, Task, PeerConnection, TaskEvent
 
 from schemas import UserCreate, UserLogin, TaskCreate, TaskUpdate, Token, PeerRequestCreate, TaskTipRequest
 from auth import hash_password, verify_password, create_access_token, decode_token
@@ -220,6 +220,13 @@ def create_task(
     db.commit()
     db.refresh(new_task)
 
+    # Log creation
+    db.add(TaskEvent(task_id=new_task.id, user_id=current_user.id, event_type="CREATED"))
+    if new_task.assigned_to_id:
+        db.add(TaskEvent(task_id=new_task.id, user_id=current_user.id, event_type="ASSIGNED", details=f"Assigned to peer {new_task.assigned_to_id}"))
+    db.commit()
+    db.refresh(new_task)
+
     return new_task
 
 
@@ -254,6 +261,31 @@ def get_tasks(
         return {"error_debug": str(e), "traceback": traceback.format_exc()}
 
 
+@app.get("/tasks/{task_id}/events")
+def get_task_events(task_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.user_id != current_user.id and task.assigned_to_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to view this task's events")
+    
+    events = db.query(TaskEvent).filter(TaskEvent.task_id == task_id).order_by(TaskEvent.created_at.desc()).all()
+    
+    # We will format this directly to avoid needing a response_model for now
+    result = []
+    for e in events:
+        user = db.query(User).filter(User.id == e.user_id).first() if e.user_id else None
+        result.append({
+            "id": e.id,
+            "task_id": e.task_id,
+            "user_id": e.user_id,
+            "user_name": user.name if user else "System",
+            "event_type": e.event_type,
+            "details": e.details,
+            "created_at": e.created_at
+        })
+    return result
+
 # =========================
 # TASK: UPDATE
 # =========================
@@ -284,6 +316,7 @@ def update_task(
             owner.luffies += task.reward_luffies
         task.assigned_to_id = None
         task.updated_at = datetime.utcnow()
+        db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="REJECTED"))
         db.commit()
         db.refresh(task)
         return task
@@ -293,8 +326,10 @@ def update_task(
         if "is_completed" in update_data and update_data["is_completed"] != task.is_completed:
             if update_data["is_completed"]:
                 current_user.luffies += task.reward_luffies
+                db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="COMPLETED"))
             else:
                 current_user.luffies = max(0, current_user.luffies - task.reward_luffies)
+                # optionally log un-completed, but we'll stick to COMPLETED for now
             task.is_completed = update_data["is_completed"]
         task.updated_at = datetime.utcnow()
         db.commit()
@@ -324,8 +359,11 @@ def update_task(
             # Revoking an assignment back to self
             elif task.assigned_to_id is not None and new_assignee_id is None:
                 current_user.luffies += task.reward_luffies
+                db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="ASSIGNED", details="Assignment revoked"))
             
             task.assigned_to_id = new_assignee_id
+            if new_assignee_id is not None:
+                db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="ASSIGNED", details=f"Assigned to peer {new_assignee_id}"))
 
     # Owner completion (only if unassigned)
     if "is_completed" in update_data and update_data["is_completed"] != task.is_completed:
@@ -333,6 +371,7 @@ def update_task(
             raise HTTPException(status_code=400, detail="Cannot complete a task assigned to someone else")
         if update_data["is_completed"]:
             current_user.luffies += task.reward_luffies
+            db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="COMPLETED"))
         else:
             current_user.luffies = max(0, current_user.luffies - task.reward_luffies)
         task.is_completed = update_data["is_completed"]
@@ -406,6 +445,8 @@ def tip_task(
     current_user.luffies -= tip.amount
     assignee.luffies += tip.amount
     task.tipped_amount = tip.amount
+
+    db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="TIPPED", details=f"Tipped {tip.amount} Whuffies"))
 
     db.commit()
     db.refresh(task)

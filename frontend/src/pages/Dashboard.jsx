@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getTasks, createTask, updateTask, deleteTask, tipTask } from "../api/tasks";
+import { getTasks, createTask, updateTask, deleteTask, tipTask, getTaskEvents } from "../api/tasks";
 import { getUserProfile } from "../api/users";
 import { getPeers, requestPeer, acceptPeer } from "../api/peers";
 import { useNavigate } from "react-router-dom";
@@ -49,6 +49,8 @@ export default function Dashboard() {
   const [isMacEditing, setIsMacEditing] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [expandedActivity, setExpandedActivity] = useState(null);
+  const [taskActivities, setTaskActivities] = useState({});
 
   const navigate = useNavigate();
 
@@ -176,8 +178,30 @@ export default function Dashboard() {
       
       const u = await getUserProfile();
       setLuffies(u.luffies || 0);
+      
+      // refresh events if open
+      if (expandedActivity === task.id) {
+        const evts = await getTaskEvents(task.id);
+        setTaskActivities(prev => ({ ...prev, [task.id]: evts }));
+      }
     } catch (err) {
       alert(err.response?.data?.detail || "Failed to send tip");
+    }
+  };
+
+  const toggleActivity = async (taskId) => {
+    if (expandedActivity === taskId) {
+      setExpandedActivity(null);
+      return;
+    }
+    setExpandedActivity(taskId);
+    if (!taskActivities[taskId]) {
+      try {
+        const evts = await getTaskEvents(taskId);
+        setTaskActivities(prev => ({ ...prev, [taskId]: evts }));
+      } catch (err) {
+        console.error("Failed to fetch events", err);
+      }
     }
   };
 
@@ -316,6 +340,7 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="task-actions">
+                      <button className="icon-btn activity" onClick={() => toggleActivity(task.id)} title="Activity History">🕒</button>
                       {task.user_id !== currentUserId ? (
                         <button className="icon-btn delete" onClick={() => handleReject(task.id)} title="Reject">✕</button>
                       ) : (
@@ -327,8 +352,32 @@ export default function Dashboard() {
                         </>
                       )}
                     </div>
-                  </div>
-                );
+                  
+                  {expandedActivity === task.id && (
+                    <div className="task-activity-panel">
+                      <div className="activity-header">Activity History</div>
+                      {taskActivities[task.id] ? (
+                        taskActivities[task.id].length > 0 ? (
+                          <div className="activity-list">
+                            {taskActivities[task.id].map(evt => (
+                              <div key={evt.id} className="activity-item">
+                                <span className="activity-time">{timeAgo(evt.created_at)}</span>
+                                <span className="activity-user">{evt.user_name}</span>
+                                <span className="activity-action">{evt.event_type}</span>
+                                {evt.details && <span className="activity-details">({evt.details})</span>}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="activity-empty">No activity recorded.</div>
+                        )
+                      ) : (
+                        <div className="activity-loading">Loading...</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
               });
             })()}
           </div>

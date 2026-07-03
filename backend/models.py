@@ -58,5 +58,23 @@ class Task(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     assigned_to_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
+    events = relationship("TaskEvent", back_populates="task", cascade="all, delete-orphan", order_by="TaskEvent.created_at")
+
+# -------------------
+# TASK EVENT MODEL
+# -------------------
+class TaskEvent(Base):
+    __tablename__ = "task_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    event_type = Column(String(50), nullable=False)
+    details = Column(String(255), nullable=True)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow)
+
+    task = relationship("Task", back_populates="events")
+    user = relationship("User")
+
     user = relationship("User", back_populates="tasks", foreign_keys=[user_id])
     assignee = relationship("User", back_populates="assigned_tasks", foreign_keys=[assigned_to_id])

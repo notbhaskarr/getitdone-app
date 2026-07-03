@@ -66,3 +66,14 @@ class TaskUpdate(BaseModel):
 
 class TaskTipRequest(BaseModel):
     amount: int
+
+class TaskEventRead(BaseModel):
+    id: UUID
+    task_id: UUID
+    user_id: Optional[UUID] = None
+    event_type: str
+    details: Optional[str] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True

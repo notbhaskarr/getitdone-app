@@ -92,3 +92,18 @@ export const tipTask = async (taskId, amount) => {
 
   return res.data;
 };
+
+// -------------------------
+// GET TASK EVENTS (JWT REQUIRED)
+// -------------------------
+export const getTaskEvents = async (taskId) => {
+  const token = localStorage.getItem("token");
+
+  const res = await axios.get(`${BASE_URL}/tasks/${taskId}/events`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.data;
+};
