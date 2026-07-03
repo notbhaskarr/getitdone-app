@@ -352,29 +352,7 @@ export default function Dashboard() {
                         </>
                       )}
                     </div>
-                  
-                  {expandedActivity === task.id && (
-                    <div className="task-activity-panel">
-                      <div className="activity-header">Activity History</div>
-                      {taskActivities[task.id] ? (
-                        taskActivities[task.id].length > 0 ? (
-                          <div className="activity-list">
-                            {taskActivities[task.id].map(evt => (
-                              <div key={evt.id} className="activity-item">
-                                <span className="activity-time">{timeAgo(evt.created_at)}</span>
-                                <span className="activity-message">{evt.message || `${evt.user_name} ${evt.event_type}`}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="activity-empty">No activity recorded.</div>
-                        )
-                      ) : (
-                        <div className="activity-loading">Loading...</div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                  </div>
               );
               });
             })()}
@@ -563,6 +541,38 @@ export default function Dashboard() {
                       </div>
                     </div>
                   ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {expandedActivity && (
+        <div className="mac-modal-overlay">
+          <div className="mac-modal" style={{ '--task-color': '200, 200, 200', width: '500px', height: 'auto', minHeight: '300px' }}>
+            <div className="mac-header" style={{ justifyContent: 'space-between' }}>
+              <h2 className="mac-title" style={{ fontSize: '16px', margin: 0 }}>Activity History</h2>
+              <div className="mac-controls">
+                <button className="mac-btn red" onClick={() => setExpandedActivity(null)} title="Close"></button>
+              </div>
+            </div>
+            <div className="mac-content" style={{ padding: '24px' }}>
+              <div className="task-activity-panel" style={{ marginTop: 0 }}>
+                {taskActivities[expandedActivity] ? (
+                  taskActivities[expandedActivity].length > 0 ? (
+                    <div className="activity-list">
+                      {taskActivities[expandedActivity].map(evt => (
+                        <div key={evt.id} className="activity-item">
+                          <span className="activity-time">{timeAgo(evt.created_at)}</span>
+                          <span className="activity-message">{evt.message || `${evt.user_name} ${evt.event_type}`}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="activity-empty">No activity recorded.</div>
+                  )
+                ) : (
+                  <div className="activity-loading">Loading...</div>
                 )}
               </div>
             </div>
