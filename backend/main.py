@@ -231,10 +231,13 @@ def get_tasks(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-
-    return db.query(Task).filter(
-        or_(Task.user_id == current_user.id, Task.assigned_to_id == current_user.id)
-    ).all()
+    try:
+        return db.query(Task).filter(
+            or_(Task.user_id == current_user.id, Task.assigned_to_id == current_user.id)
+        ).all()
+    except Exception as e:
+        import traceback
+        return {"error_debug": str(e), "traceback": traceback.format_exc()}
 
 
 # =========================
