@@ -226,6 +226,20 @@ def create_task(
 # =========================
 # TASK: GET USER TASKS ONLY
 # =========================
+@app.get("/debug_tasks")
+def debug_tasks(db: Session = Depends(get_db)):
+    try:
+        tasks = db.query(Task).all()
+        result = []
+        for t in tasks:
+            d = dict(t.__dict__)
+            d.pop("_sa_instance_state", None)
+            result.append(d)
+        return {"tasks": result}
+    except Exception as e:
+        import traceback
+        return {"error_debug": str(e), "traceback": traceback.format_exc()}
+
 @app.get("/tasks")
 def get_tasks(
     db: Session = Depends(get_db),
