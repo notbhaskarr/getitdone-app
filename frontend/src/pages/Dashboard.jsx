@@ -191,11 +191,13 @@ export default function Dashboard() {
                   {isMacEditing ? (
                     <button className="icon-btn edit" onClick={handleMacSave} title="Save">✓</button>
                   ) : (
-                    <button className="icon-btn edit" onClick={() => setIsMacEditing(true)} title="Edit">✎</button>
+                    <>
+                      <button className="icon-btn edit" onClick={() => setIsMacEditing(true)} title="Edit">✎</button>
+                      <span style={{ fontSize: '13px', opacity: 0.5, fontFamily: 'var(--sans)', marginLeft: '4px' }}>
+                        Last modified {timeAgo(maximizedTask.updated_at)}
+                      </span>
+                    </>
                   )}
-                  <span style={{ fontSize: '13px', opacity: 0.5, fontFamily: 'var(--sans)', marginLeft: '4px' }}>
-                    Last modified {timeAgo(maximizedTask.updated_at)}
-                  </span>
                 </div>
                 <div className="mac-controls">
                   <button className="mac-btn red" onClick={() => setMaximizedTask(null)} title="Close"></button>
