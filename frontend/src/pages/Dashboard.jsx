@@ -362,9 +362,7 @@ export default function Dashboard() {
                             {taskActivities[task.id].map(evt => (
                               <div key={evt.id} className="activity-item">
                                 <span className="activity-time">{timeAgo(evt.created_at)}</span>
-                                <span className="activity-user">{evt.user_name}</span>
-                                <span className="activity-action">{evt.event_type}</span>
-                                {evt.details && <span className="activity-details">({evt.details})</span>}
+                                <span className="activity-message">{evt.message || `${evt.user_name} ${evt.event_type}`}</span>
                               </div>
                             ))}
                           </div>

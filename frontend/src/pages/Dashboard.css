@@ -556,17 +556,10 @@
 .activity-time {
   font-family: var(--mono);
   opacity: 0.5;
-  min-width: 65px;
+  min-width: 75px;
 }
-.activity-user {
-  font-weight: 600;
-}
-.activity-action {
-  opacity: 0.8;
-}
-.activity-details {
-  font-family: var(--mono);
-  color: var(--accent);
+.activity-message {
+  font-weight: 500;
   opacity: 0.9;
 }
 .activity-empty, .activity-loading {

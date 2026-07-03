@@ -275,13 +275,46 @@ def get_task_events(task_id: UUID, db: Session = Depends(get_db), current_user: 
     result = []
     for e in events:
         user = db.query(User).filter(User.id == e.user_id).first() if e.user_id else None
+        user_name = user.name if user else "System"
+        
+        message = f"{user_name} {e.event_type}"
+        
+        if e.event_type == "CREATED":
+            message = f"{user_name} CREATED the task."
+        elif e.event_type == "COMPLETED":
+            message = f"{user_name} COMPLETED the task."
+        elif e.event_type == "REJECTED":
+            message = f"{user_name} REJECTED the task."
+        elif e.event_type == "ASSIGNED":
+            if e.details and e.details.startswith("Assigned to peer "):
+                peer_id_str = e.details.replace("Assigned to peer ", "")
+                try:
+                    peer_uuid = UUID(peer_id_str)
+                    peer_user = db.query(User).filter(User.id == peer_uuid).first()
+                    peer_name = peer_user.name if peer_user else "someone"
+                    message = f"{user_name} ASSIGNED task to {peer_name}"
+                except:
+                    message = f"{user_name} ASSIGNED task"
+            else:
+                message = f"{user_name} {e.details}" if e.details else f"{user_name} ASSIGNED task"
+        elif e.event_type == "TIPPED":
+            # The tip goes to the assignee
+            amount = e.details.replace("Tipped ", "").replace(" Whuffies", "") if e.details else "some"
+            assignee_name = "someone"
+            if task.assigned_to_id:
+                assignee = db.query(User).filter(User.id == task.assigned_to_id).first()
+                if assignee:
+                    assignee_name = assignee.name
+            message = f"{user_name} TIPPED {amount} whuffies to {assignee_name}"
+
         result.append({
             "id": e.id,
             "task_id": e.task_id,
             "user_id": e.user_id,
-            "user_name": user.name if user else "System",
+            "user_name": user_name,
             "event_type": e.event_type,
             "details": e.details,
+            "message": message,
             "created_at": e.created_at
         })
     return result
