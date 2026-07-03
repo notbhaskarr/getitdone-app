@@ -25,6 +25,13 @@
   width: 100%;
 }
 
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-h);
+}
+
 .dashboard-header h2 {
   margin: 0;
   text-shadow: 0 8px 16px rgba(162, 178, 150, 0.35);

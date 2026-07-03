@@ -24,7 +24,16 @@ export default function LoginPage() {
 
   return (
     <div className="auth-wrapper">
-      <h2 className="auth-logo">GETitDONE</h2>
+      <div className="auth-logo-container">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+          {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+            <g key={angle} transform={`rotate(${angle} 12 12)`}>
+              <path d="M12 8 C14 5 15 3 13.5 1.5 M12.5 5 C15.5 5 16.5 3 17.5 1.5 M12 8 C10 6 9.5 7 7.5 4.5" />
+            </g>
+          ))}
+        </svg>
+        <h2 className="auth-logo">GETitDONE</h2>
+      </div>
 
       <div className="auth-card">
         <input
