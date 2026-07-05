@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getTasks, createTask, updateTask, deleteTask, tipTask, getTaskEvents } from "../api/tasks";
 import { getUserProfile } from "../api/users";
-import { getPeers, requestPeer, acceptPeer } from "../api/peers";
+import { getPeers, requestPeer, acceptPeer, removePeer } from "../api/peers";
 import { useNavigate } from "react-router-dom";
 import ReactMarkdown from 'react-markdown';
 import Calendar from "../components/Calendar";
@@ -290,10 +290,21 @@ export default function Dashboard() {
   const handlePeerAccept = async (connId) => {
     try {
       await acceptPeer(connId);
-      const p = await getPeers();
-      setPeers(p);
+      const peersData = await getPeers();
+      setPeers(peersData.peers || []);
     } catch (err) {
       alert("Failed to accept request");
+    }
+  };
+
+  const handlePeerRemove = async (connId) => {
+    if (!window.confirm("Are you sure you want to remove this peer?")) return;
+    try {
+      await removePeer(connId);
+      const peersData = await getPeers();
+      setPeers(peersData.peers || []);
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to remove peer");
     }
   };
 
@@ -636,14 +647,17 @@ export default function Dashboard() {
                   <p style={{ opacity: 0.5, fontSize: '14px' }}>No peers yet.</p>
                 ) : (
                   peers.map(p => (
-                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', background: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                    <div key={p.id} className="peer-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '6px', background: 'rgba(253, 246, 227, 0.03)' }}>
                       <div>
                         <div style={{ fontSize: '14px', fontWeight: '500' }}>{p.peer_name}</div>
                         <div style={{ fontSize: '12px', opacity: 0.5 }}>@{p.peer_email}</div>
                       </div>
-                      <div>
+                      <div className="peer-status-container">
                         {p.status === 'accepted' ? (
-                          <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 'bold' }}>Accepted</span>
+                          <>
+                            <span className="peer-status-text" style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 'bold' }}>Accepted</span>
+                            <button className="peer-remove-btn" onClick={() => handlePeerRemove(p.id)} title="Remove Peer">✖</button>
+                          </>
                         ) : p.is_requester ? (
                           <span style={{ fontSize: '12px', opacity: 0.5 }}>Pending</span>
                         ) : (

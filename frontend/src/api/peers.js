@@ -22,3 +22,8 @@ export const acceptPeer = async (connId) => {
   const res = await axios.put(`${BASE_URL}/peers/accept/${connId}`, {}, getAuthHeaders());
   return res.data;
 };
+
+export const removePeer = async (connId) => {
+  const res = await axios.delete(`${BASE_URL}/peers/${connId}`, getAuthHeaders());
+  return res.data;
+};

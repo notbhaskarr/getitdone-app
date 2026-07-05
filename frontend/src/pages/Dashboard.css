@@ -443,6 +443,62 @@
   margin: 0;
 }
 
+.toast-progress {
+  height: 100%;
+  background: var(--text-h);
+  transition: width 100ms linear;
+}
+
+/* Peer Hover Reveal */
+.peer-row {
+  position: relative;
+  transition: background 0.2s ease;
+}
+
+.peer-row:hover {
+  background: rgba(253, 246, 227, 0.08) !important;
+}
+
+.peer-status-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.peer-status-text {
+  transition: opacity 0.2s ease;
+}
+
+.peer-remove-btn {
+  position: absolute;
+  right: 0;
+  opacity: 0;
+  visibility: hidden;
+  background: transparent;
+  color: #ff4d4d;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.2s ease;
+  transform: translateX(10px);
+}
+
+.peer-row:hover .peer-status-text {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.peer-row:hover .peer-remove-btn {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+.peer-remove-btn:hover {
+  transform: scale(1.1) !important;
+}
+
 .mac-desc {
   font-family: var(--sans);
   font-size: 16px;

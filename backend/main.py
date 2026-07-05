@@ -220,6 +220,22 @@ def accept_peer(conn_id: UUID, db: Session = Depends(get_db), current_user: User
     return {"message": "Request accepted"}
 
 # =========================
+# PEER: REMOVE CONNECTION
+# =========================
+@app.delete("/peers/{conn_id}")
+def remove_peer(conn_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    conn = db.query(PeerConnection).filter(
+        PeerConnection.id == conn_id,
+        or_(PeerConnection.requester_id == current_user.id, PeerConnection.receiver_id == current_user.id)
+    ).first()
+    if not conn:
+        raise HTTPException(status_code=404, detail="Peer connection not found")
+    
+    db.delete(conn)
+    db.commit()
+    return {"message": "Peer removed"}
+
+# =========================
 # PEER: LIST CONNECTIONS
 # =========================
 @app.get("/peers")
