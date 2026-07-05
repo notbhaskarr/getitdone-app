@@ -126,7 +126,7 @@ manager = ConnectionManager()
 # WEBSOCKET ENDPOINT
 # =========================
 @app.websocket("/ws/{token}")
-async def websocket_endpoint(websocket: WebSocket, token: str):
+async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Depends(get_db)):
     payload = decode_token(token)
     if not payload or not payload.get("user_id"):
         await websocket.close(code=1008)
@@ -135,11 +135,33 @@ async def websocket_endpoint(websocket: WebSocket, token: str):
     user_id = payload.get("user_id")
     await manager.connect(websocket, user_id)
     
+    # Get accepted peers
+    conns = db.query(PeerConnection).filter(
+        or_(PeerConnection.requester_id == user_id, PeerConnection.receiver_id == user_id),
+        PeerConnection.status == 'accepted'
+    ).all()
+    
+    peer_ids = []
+    for c in conns:
+        pid = c.receiver_id if str(c.requester_id) == str(user_id) else c.requester_id
+        peer_ids.append(str(pid))
+        
+    # Send current online peers to this user
+    online_peers = [p for p in peer_ids if p in manager.active_connections]
+    await websocket.send_json({"type": "online_peers", "peers": online_peers})
+    
+    # Broadcast to online peers that this user is now online
+    for pid in online_peers:
+        await manager.send_personal_message({"type": "peer_online", "peer_id": user_id}, pid)
+    
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(user_id)
+        # Broadcast offline status
+        for pid in online_peers:
+            await manager.send_personal_message({"type": "peer_offline", "peer_id": user_id}, pid)
 
 # =========================
 # JWT DEPENDENCY (CURRENT USER)

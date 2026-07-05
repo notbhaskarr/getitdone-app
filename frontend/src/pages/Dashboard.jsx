@@ -51,6 +51,7 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState([]);
   const [tippingTask, setTippingTask] = useState(null);
   const [tipAmount, setTipAmount] = useState("");
+  const [onlinePeers, setOnlinePeers] = useState(new Set());
 
   const navigate = useNavigate();
 
@@ -88,12 +89,22 @@ export default function Dashboard() {
     try {
       ws = new WebSocket(wsUrl);
       
-      ws.onmessage = (event) => {
+      ws.onmessage = (e) => {
         try {
-          const data = JSON.parse(event.data);
-          if (data.type === "NOTIFICATION") {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "online_peers") {
+            setOnlinePeers(new Set(msg.peers));
+          } else if (msg.type === "peer_online") {
+            setOnlinePeers(prev => new Set(prev).add(msg.peer_id));
+          } else if (msg.type === "peer_offline") {
+            setOnlinePeers(prev => {
+              const next = new Set(prev);
+              next.delete(msg.peer_id);
+              return next;
+            });
+          } else if (msg.type === "NOTIFICATION") {
             const notifId = Date.now();
-            setNotifications(prev => [...prev, { id: notifId, ...data }]);
+            setNotifications(prev => [...prev, { id: notifId, ...msg }]);
             
             // Auto dismiss after 5s
             setTimeout(() => {
@@ -649,7 +660,12 @@ export default function Dashboard() {
                   peers.map(p => (
                     <div key={p.id} className="peer-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '6px', background: 'rgba(253, 246, 227, 0.03)' }}>
                       <div>
-                        <div style={{ fontSize: '14px', fontWeight: '500' }}>{p.peer_name}</div>
+                        <div style={{ fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {p.peer_name}
+                          {p.status === 'accepted' && onlinePeers.has(p.peer_id) && (
+                            <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#4ade80', boxShadow: '0 0 6px #4ade80' }} title="Online"></span>
+                          )}
+                        </div>
                         <div style={{ fontSize: '12px', opacity: 0.5 }}>@{p.peer_email}</div>
                       </div>
                       <div className="peer-status-container">
