@@ -53,6 +53,7 @@ export default function Dashboard() {
   const [taskActivities, setTaskActivities] = useState({});
   const [loadingTasks, setLoadingTasks] = useState(new Set());
   const [taskFilter, setTaskFilter] = useState('all');
+  const [notifications, setNotifications] = useState([]);
 
   const navigate = useNavigate();
 
@@ -77,6 +78,47 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const baseUrl = import.meta.env.VITE_API_URL || "https://getitdone-app.onrender.com";
+    const wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://") + `/ws/${token}`;
+    
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "NOTIFICATION") {
+            const notifId = Date.now();
+            setNotifications(prev => [...prev, { id: notifId, ...data }]);
+            
+            // Auto dismiss after 5s
+            setTimeout(() => {
+              setNotifications(prev => prev.filter(n => n.id !== notifId));
+            }, 5000);
+            
+            // Auto refresh state
+            loadData();
+          }
+        } catch (e) {
+          console.error("Failed to parse WS message", e);
+        }
+      };
+      
+      ws.onerror = (e) => console.error("WebSocket error", e);
+    } catch(e) {
+      console.error("Failed to setup WebSocket", e);
+    }
+
+    return () => {
+      if (ws) ws.close();
+    };
   }, []);
 
   const handleCreate = async (e) => {
@@ -296,6 +338,7 @@ export default function Dashboard() {
         </div>
       </div>
       
+
       <div style={{ padding: '0 24px', display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
         {['All', 'To Do', 'Delegated', 'Completed'].map(f => {
           const key = f.toLowerCase().replace(' ', '');
@@ -638,6 +681,20 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <div className="mac-toast-container">
+        {notifications.map(notif => (
+          <div key={notif.id} className="mac-toast" onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}>
+            <div className="toast-icon">
+              {notif.event === 'ASSIGNED' && '📝'}
+              {notif.event === 'COMPLETED' && '✅'}
+              {notif.event === 'REJECTED' && '❌'}
+              {notif.event === 'TIPPED' && '✦'}
+            </div>
+            <div className="toast-message">{notif.message}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

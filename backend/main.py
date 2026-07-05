@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Header
+from fastapi import FastAPI, Depends, HTTPException, Header, WebSocket, WebSocketDisconnect, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from uuid import UUID
@@ -91,6 +91,51 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     token = create_access_token({"user_id": str(db_user.id)})
 
     return {"access_token": token}
+
+# =========================
+# WEBSOCKET MANAGER
+# =========================
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections = {}
+
+    async def connect(self, websocket: WebSocket, user_id: str):
+        await websocket.accept()
+        self.active_connections[user_id] = websocket
+
+    def disconnect(self, user_id: str):
+        if user_id in self.active_connections:
+            del self.active_connections[user_id]
+
+    async def send_personal_message(self, message: dict, user_id: str):
+        user_id_str = str(user_id)
+        if user_id_str in self.active_connections:
+            websocket = self.active_connections[user_id_str]
+            try:
+                await websocket.send_json(message)
+            except Exception:
+                self.disconnect(user_id_str)
+
+manager = ConnectionManager()
+
+# =========================
+# WEBSOCKET ENDPOINT
+# =========================
+@app.websocket("/ws/{token}")
+async def websocket_endpoint(websocket: WebSocket, token: str):
+    payload = decode_token(token)
+    if not payload or not payload.get("user_id"):
+        await websocket.close(code=1008)
+        return
+        
+    user_id = payload.get("user_id")
+    await manager.connect(websocket, user_id)
+    
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(user_id)
 
 # =========================
 # JWT DEPENDENCY (CURRENT USER)
@@ -198,6 +243,7 @@ def list_peers(db: Session = Depends(get_db), current_user: User = Depends(get_c
 @app.post("/tasks")
 def create_task(
     task: TaskCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -224,6 +270,11 @@ def create_task(
     db.add(TaskEvent(task_id=new_task.id, user_id=current_user.id, event_type="CREATED"))
     if new_task.assigned_to_id:
         db.add(TaskEvent(task_id=new_task.id, user_id=current_user.id, event_type="ASSIGNED", details=f"Assigned to peer {new_task.assigned_to_id}"))
+        background_tasks.add_task(
+            manager.send_personal_message,
+            {"type": "NOTIFICATION", "event": "ASSIGNED", "message": f"{current_user.name} assigned a task to you: {new_task.title}", "task_id": str(new_task.id)},
+            str(new_task.assigned_to_id)
+        )
     db.commit()
     db.refresh(new_task)
 
@@ -326,6 +377,7 @@ def get_task_events(task_id: UUID, db: Session = Depends(get_db), current_user: 
 def update_task(
     task_id: UUID,
     update: TaskUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -350,6 +402,11 @@ def update_task(
         task.assigned_to_id = None
         task.updated_at = datetime.utcnow()
         db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="REJECTED"))
+        background_tasks.add_task(
+            manager.send_personal_message,
+            {"type": "NOTIFICATION", "event": "REJECTED", "message": f"{current_user.name} rejected your task: {task.title}", "task_id": str(task.id)},
+            str(task.user_id)
+        )
         db.commit()
         db.refresh(task)
         return task
@@ -361,6 +418,11 @@ def update_task(
             if update_data["is_completed"]:
                 db_current_user.luffies += task.reward_luffies
                 db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="COMPLETED"))
+                background_tasks.add_task(
+                    manager.send_personal_message,
+                    {"type": "NOTIFICATION", "event": "COMPLETED", "message": f"{current_user.name} completed your task: {task.title}", "task_id": str(task.id)},
+                    str(task.user_id)
+                )
             else:
                 db_current_user.luffies = max(0, db_current_user.luffies - task.reward_luffies)
                 # optionally log un-completed, but we'll stick to COMPLETED for now
@@ -390,6 +452,11 @@ def update_task(
                 if db_current_user.luffies < task.reward_luffies:
                     raise HTTPException(status_code=400, detail="Not enough Whuffies to assign")
                 db_current_user.luffies -= task.reward_luffies
+                background_tasks.add_task(
+                    manager.send_personal_message,
+                    {"type": "NOTIFICATION", "event": "ASSIGNED", "message": f"{current_user.name} assigned a task to you: {task.title}", "task_id": str(task.id)},
+                    str(new_assignee_id)
+                )
             
             # Revoking an assignment back to self
             elif task.assigned_to_id is not None and new_assignee_id is None:
@@ -448,6 +515,7 @@ def delete_task(
 def tip_task(
     task_id: UUID,
     tip: TaskTipRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -484,6 +552,11 @@ def tip_task(
     task.tipped_amount = tip.amount
 
     db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="TIPPED", details=f"Tipped {tip.amount} Whuffies"))
+    background_tasks.add_task(
+        manager.send_personal_message,
+        {"type": "NOTIFICATION", "event": "TIPPED", "message": f"{current_user.name} tipped you {tip.amount} Whuffies for {task.title}!", "task_id": str(task.id)},
+        str(task.assigned_to_id)
+    )
 
     db.commit()
     db.refresh(task)
