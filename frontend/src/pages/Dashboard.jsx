@@ -599,7 +599,7 @@ export default function Dashboard() {
                       
                       {maximizedTask.due_date && (
                         <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-h)', opacity: 0.9, marginTop: '-4px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          📅 Due Date: {new Date(maximizedTask.due_date.substring(0, 10)).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                          Due Date: {new Date(maximizedTask.due_date.substring(0, 10)).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
                         </div>
                       )}
 
