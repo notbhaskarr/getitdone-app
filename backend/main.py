@@ -58,7 +58,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Username already taken")
 
     new_user = User(
-        name=user.name,
+        name=user.name.strip().title(),
         email=user.email,
         password_hash=hash_password(user.password)
     )
