@@ -663,8 +663,13 @@ export default function Dashboard() {
                         if (evt.event_type === "ASSIGNED") {
                           if (evt.details && evt.details.includes("Assigned to peer")) {
                             const peerId = evt.details.replace("Assigned to peer ", "");
-                            const peerObj = peers.find(p => p.peer_id === peerId);
-                            const peerName = peerObj ? peerObj.peer_name : "someone";
+                            let peerName = "someone";
+                            if (peerId === currentUserId) {
+                              peerName = "you";
+                            } else {
+                              const peerObj = peers.find(p => p.peer_id === peerId);
+                              if (peerObj) peerName = peerObj.peer_name;
+                            }
                             messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task to {peerName}.</span>;
                           } else {
                             messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task{evt.details ? ` - ${evt.details}` : ''}</span>;
