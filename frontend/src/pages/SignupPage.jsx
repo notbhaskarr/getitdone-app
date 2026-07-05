@@ -46,7 +46,7 @@ export default function SignupPage() {
 
         <input
           className="auth-input"
-          placeholder="Email"
+          placeholder="Username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />

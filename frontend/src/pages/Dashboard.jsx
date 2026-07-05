@@ -607,10 +607,10 @@ export default function Dashboard() {
             <div className="mac-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px' }}>
               <form onSubmit={handlePeerRequest} style={{ display: 'flex', gap: '8px' }}>
                 <input
-                  type="email"
+                  type="text"
                   value={peerEmail}
                   onChange={(e) => setPeerEmail(e.target.value)}
-                  placeholder="Peer email address"
+                  placeholder="Peer username"
                   style={{ flexGrow: 1, padding: '8px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)' }}
                 />
                 <button type="submit" className="icon-btn edit" style={{ padding: '0 12px', fontSize: '12px' }}>{requestBtnText}</button>
@@ -625,7 +625,7 @@ export default function Dashboard() {
                     <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', background: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border)' }}>
                       <div>
                         <div style={{ fontSize: '14px', fontWeight: '500' }}>{p.peer_name}</div>
-                        <div style={{ fontSize: '12px', opacity: 0.5 }}>{p.peer_email}</div>
+                        <div style={{ fontSize: '12px', opacity: 0.5 }}>@{p.peer_email}</div>
                       </div>
                       <div>
                         {p.status === 'accepted' ? (

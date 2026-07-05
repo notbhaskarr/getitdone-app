@@ -38,7 +38,7 @@ export default function LoginPage() {
       <div className="auth-card">
         <input
           className="auth-input"
-          placeholder="Email"
+          placeholder="Username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />

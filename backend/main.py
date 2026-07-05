@@ -43,6 +43,9 @@ def home():
 # =========================
 @app.post("/signup")
 def signup(user: UserCreate, db: Session = Depends(get_db)):
+    user.email = user.email.strip().lower()
+    if not user.email:
+        raise HTTPException(status_code=400, detail="Username cannot be empty")
 
     if len(user.password) > 72:
         raise HTTPException(
@@ -52,7 +55,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 
     existing = db.query(User).filter(User.email == user.email).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Username already taken")
 
     new_user = User(
         name=user.name,
@@ -72,6 +75,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 # =========================
 @app.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
+    user.email = user.email.strip().lower()
 
     db_user = db.query(User).filter(User.email == user.email).first()
 
@@ -181,9 +185,10 @@ def get_user_profile(current_user: User = Depends(get_current_user)):
 # =========================
 @app.post("/peers/request")
 def request_peer(req: PeerRequestCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    req.email = req.email.strip().lower()
     receiver = db.query(User).filter(User.email == req.email).first()
     if not receiver:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Username not found")
     if receiver.id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot send request to yourself")
     
