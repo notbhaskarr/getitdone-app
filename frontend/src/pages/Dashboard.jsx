@@ -658,12 +658,28 @@ export default function Dashboard() {
                 {taskActivities[expandedActivity] ? (
                   taskActivities[expandedActivity].length > 0 ? (
                     <div className="activity-list">
-                      {taskActivities[expandedActivity].map(evt => (
-                        <div key={evt.id} className="activity-item">
-                          <span className="activity-time">{formatTimestamp(evt.created_at)}</span>
-                          <span className="activity-message"> - {evt.user_name} <strong>{evt.event_type.toLowerCase()}</strong>{['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : ''}{evt.details ? ` - ${evt.details}` : ''}</span>
-                        </div>
-                      ))}
+                      {taskActivities[expandedActivity].map(evt => {
+                        let messageNode;
+                        if (evt.event_type === "ASSIGNED") {
+                          if (evt.details && evt.details.includes("Assigned to peer")) {
+                            const peerId = evt.details.replace("Assigned to peer ", "");
+                            const peerObj = peers.find(p => p.peer_id === peerId);
+                            const peerName = peerObj ? peerObj.peer_name : "someone";
+                            messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task to {peerName}.</span>;
+                          } else {
+                            messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task{evt.details ? ` - ${evt.details}` : ''}</span>;
+                          }
+                        } else {
+                          messageNode = <span className="activity-message"> - {evt.user_name} <strong>{evt.event_type.toLowerCase()}</strong>{['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : ''}{evt.details && evt.event_type !== 'TIPPED' ? ` - ${evt.details}` : ''}{evt.event_type === 'TIPPED' ? ` ${evt.details}` : ''}</span>;
+                        }
+                        
+                        return (
+                          <div key={evt.id} className="activity-item">
+                            <span className="activity-time">{formatTimestamp(evt.created_at)}</span>
+                            {messageNode}
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="activity-empty">No activity recorded.</div>
