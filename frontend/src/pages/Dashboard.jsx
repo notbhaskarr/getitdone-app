@@ -480,19 +480,7 @@ export default function Dashboard() {
                           Assigned by: {peers.find(p => p.peer_id === task.user_id)?.peer_name || "Peer"}
                         </div>
                       )}
-                      {task.due_date && (() => {
-                        const dueDateObj = new Date(task.due_date.endsWith('Z') ? task.due_date : task.due_date + 'Z');
-                        // Set current time to start of day for comparison
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const isOverdue = !task.is_completed && dueDateObj < today;
-                        const dateString = dueDateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                        return (
-                          <div style={{ fontSize: '11px', marginTop: '6px', fontWeight: 500, color: isOverdue ? '#ff4d4d' : 'var(--text)', opacity: isOverdue ? 1 : 0.6 }}>
-                            📅 {dateString} {isOverdue && "(Overdue)"}
-                          </div>
-                        );
-                      })()}
+
                     </div>
                     <div className="task-actions">
                       <button className="icon-btn activity" onClick={() => toggleActivity(task.id)} title="Activity History">
