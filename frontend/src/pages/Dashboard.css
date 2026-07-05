@@ -176,17 +176,17 @@
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .task-card {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 20px;
+  padding: 12px 16px;
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
@@ -255,8 +255,15 @@
 }
 
 .task-desc {
-  font-size: 15px;
+  font-size: 13px;
   color: var(--text);
+  opacity: 0.7;
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .task-actions {
