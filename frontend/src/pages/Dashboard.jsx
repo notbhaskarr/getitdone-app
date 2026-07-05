@@ -7,22 +7,17 @@ import ReactMarkdown from 'react-markdown';
 import Calendar from "../components/Calendar";
 import "./Dashboard.css";
 
-function timeAgo(dateString) {
+function formatTimestamp(dateString) {
   if (!dateString) return "Unknown";
-  const date = new Date(dateString + 'Z');
-  const seconds = Math.floor((new Date() - date) / 1000);
-
-  let interval = seconds / 31536000;
-  if (interval > 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " year ago" : " years ago");
-  interval = seconds / 2592000;
-  if (interval > 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " month ago" : " months ago");
-  interval = seconds / 86400;
-  if (interval > 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " day ago" : " days ago");
-  interval = seconds / 3600;
-  if (interval >= 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " hour ago" : " hours ago");
-  interval = seconds / 60;
-  if (interval >= 1) return Math.floor(interval) + (Math.floor(interval) === 1 ? " minute ago" : " minutes ago");
-  return "just now";
+  const date = new Date(dateString.endsWith('Z') ? dateString : dateString + 'Z');
+  
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yy = String(date.getFullYear()).slice(-2);
+  const hh = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${dd}:${mm}:${yy}:${hh}:${min}`;
 }
 
 export default function Dashboard() {
@@ -487,7 +482,7 @@ export default function Dashboard() {
                     <>
                       <button className="icon-btn edit" onClick={() => setIsMacEditing(true)} title="Edit">✎</button>
                       <span style={{ fontSize: '13px', opacity: 0.5, fontFamily: 'var(--sans)', marginLeft: '4px' }}>
-                        Last modified {timeAgo(maximizedTask.updated_at)}
+                        Last modified {formatTimestamp(maximizedTask.updated_at)}
                       </span>
                     </>
                   )}
@@ -665,8 +660,8 @@ export default function Dashboard() {
                     <div className="activity-list">
                       {taskActivities[expandedActivity].map(evt => (
                         <div key={evt.id} className="activity-item">
-                          <span className="activity-time">{timeAgo(evt.created_at)}</span>
-                          <span className="activity-message">{evt.message || `${evt.user_name} ${evt.event_type}`}</span>
+                          <span className="activity-time">{formatTimestamp(evt.created_at)}</span>
+                          <span className="activity-message"> - {evt.message || `${evt.user_name} ${evt.event_type}`}</span>
                         </div>
                       ))}
                     </div>
