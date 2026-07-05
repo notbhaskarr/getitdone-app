@@ -7,17 +7,33 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [isError, setIsError] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
 
   const navigate = useNavigate();
 
+  const triggerError = () => {
+    setIsError(true);
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 400);
+  };
+
+  const clearError = () => {
+    if (isError) setIsError(false);
+  };
+
   const handleSignup = async () => {
+    if (!name.trim()) {
+      triggerError();
+      return;
+    }
+    
     try {
-      setError(null);
+      setIsError(false);
       await signup(name, email, password);
       navigate("/login");
     } catch (err) {
-      setError(err?.response?.data?.detail || "Signup failed. Please try again.");
+      triggerError();
     }
   };
 
@@ -34,28 +50,27 @@ export default function SignupPage() {
         <h2 className="auth-logo">GETitDONE</h2>
       </div>
 
-      <div className="auth-card">
-        {error && <div className="auth-error">{error}</div>}
+      <div className={`auth-card${isShaking ? " shake" : ""}`}>
         <input
-          className="auth-input"
+          className={`auth-input${isError ? " error-border" : ""}`}
           placeholder="Name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => { setName(e.target.value); clearError(); }}
         />
 
         <input
-          className="auth-input"
+          className={`auth-input${isError ? " error-border" : ""}`}
           placeholder="Username"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); clearError(); }}
         />
 
         <input
-          className="auth-input"
+          className={`auth-input${isError ? " error-border" : ""}`}
           placeholder="Password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => { setPassword(e.target.value); clearError(); }}
         />
 
         <button className="auth-btn" onClick={handleSignup}>Join in</button>

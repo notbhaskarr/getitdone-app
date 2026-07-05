@@ -6,18 +6,34 @@ import "./Auth.css";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [isError, setIsError] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
 
   const navigate = useNavigate();
 
+  const triggerError = () => {
+    setIsError(true);
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 400);
+  };
+
+  const clearError = () => {
+    if (isError) setIsError(false);
+  };
+
   const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      triggerError();
+      return;
+    }
+
     try {
-      setError(null);
+      setIsError(false);
       const data = await login(email, password);
       localStorage.setItem("token", data.access_token);
       navigate("/dashboard");
     } catch (err) {
-      setError(err?.response?.data?.detail || "Login failed. Please check your credentials.");
+      triggerError();
     }
   };
 
@@ -34,21 +50,20 @@ export default function LoginPage() {
         <h2 className="auth-logo">GETitDONE</h2>
       </div>
 
-      <div className="auth-card">
-        {error && <div className="auth-error">{error}</div>}
+      <div className={`auth-card${isShaking ? " shake" : ""}`}>
         <input
-          className="auth-input"
+          className={`auth-input${isError ? " error-border" : ""}`}
           placeholder="Username"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); clearError(); }}
         />
 
         <input
-          className="auth-input"
+          className={`auth-input${isError ? " error-border" : ""}`}
           placeholder="Password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => { setPassword(e.target.value); clearError(); }}
         />
 
         <button className="auth-btn" onClick={handleLogin}>Get in</button>
