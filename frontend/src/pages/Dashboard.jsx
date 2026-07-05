@@ -52,6 +52,7 @@ export default function Dashboard() {
   const [expandedActivity, setExpandedActivity] = useState(null);
   const [taskActivities, setTaskActivities] = useState({});
   const [loadingTasks, setLoadingTasks] = useState(new Set());
+  const [taskFilter, setTaskFilter] = useState('all');
 
   const navigate = useNavigate();
 
@@ -294,12 +295,41 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+      
+      <div style={{ padding: '0 24px', display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+        {['All', 'To Do', 'Delegated', 'Completed'].map(f => {
+          const key = f.toLowerCase().replace(' ', '');
+          const isActive = taskFilter === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setTaskFilter(key)}
+              style={{
+                background: isActive ? 'rgba(253, 246, 227, 0.2)' : 'transparent',
+                border: `1px solid ${isActive ? 'rgba(253, 246, 227, 0.5)' : 'rgba(253, 246, 227, 0.1)'}`,
+                color: isActive ? 'var(--text-h)' : 'var(--text-p)',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: isActive ? '600' : '400',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {f}
+            </button>
+          )
+        })}
+      </div>
 
       <div className="dashboard-layout">
         <div className="dashboard-main">
           <div className="task-list">
             {(() => {
-              const filteredTasks = selectedDate
+              let filteredTasks = selectedDate
                 ? tasks.filter(task => {
                   if (!task.created_at) return false;
                   const d1 = new Date(task.created_at + 'Z');
@@ -308,6 +338,14 @@ export default function Dashboard() {
                     d1.getDate() === selectedDate.getDate();
                 })
                 : tasks;
+                
+              if (taskFilter === 'todo') {
+                filteredTasks = filteredTasks.filter(t => !t.is_completed && (!t.assigned_to_id || t.assigned_to_id === currentUserId));
+              } else if (taskFilter === 'delegated') {
+                filteredTasks = filteredTasks.filter(t => t.user_id === currentUserId && t.assigned_to_id && t.assigned_to_id !== currentUserId);
+              } else if (taskFilter === 'completed') {
+                filteredTasks = filteredTasks.filter(t => t.is_completed);
+              }
 
               if (filteredTasks.length === 0) {
                 return <p style={{ textAlign: "center", color: "var(--text)" }}>{selectedDate ? "No tasks for this date." : "No tasks yet. Create one!"}</p>;
