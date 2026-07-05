@@ -425,7 +425,7 @@ def update_task(
                 )
             else:
                 db_current_user.luffies = max(0, db_current_user.luffies - task.reward_luffies)
-                # optionally log un-completed, but we'll stick to COMPLETED for now
+                db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="REOPENED"))
             task.is_completed = update_data["is_completed"]
         task.updated_at = datetime.utcnow()
         db.commit()
@@ -477,6 +477,7 @@ def update_task(
             db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="COMPLETED"))
         else:
             current_user.luffies = max(0, current_user.luffies - task.reward_luffies)
+            db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="REOPENED"))
         task.is_completed = update_data["is_completed"]
 
     task.updated_at = datetime.utcnow()
