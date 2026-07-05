@@ -49,6 +49,8 @@ export default function Dashboard() {
   const [loadingTasks, setLoadingTasks] = useState(new Set());
   const [taskFilter, setTaskFilter] = useState('all');
   const [notifications, setNotifications] = useState([]);
+  const [tippingTask, setTippingTask] = useState(null);
+  const [tipAmount, setTipAmount] = useState("");
 
   const navigate = useNavigate();
 
@@ -211,34 +213,46 @@ export default function Dashboard() {
     navigate("/");
   };
 
-  const handleTip = async (task) => {
+  const openTipModal = (task) => {
     if (loadingTasks.has(task.id)) return;
+    setTippingTask(task);
+    setTipAmount("");
+  };
 
-    const rawAmount = prompt("How many Whuffies would you like to tip?", "3");
-    if (rawAmount === null) return;
-    const amount = parseInt(rawAmount, 10);
+  const submitTip = async (e) => {
+    e.preventDefault();
+    if (!tippingTask) return;
+    
+    const amount = parseInt(tipAmount, 10);
     if (isNaN(amount) || amount <= 0) {
       alert("Please enter a valid positive number.");
       return;
     }
 
-    setLoadingTasks(prev => new Set(prev).add(task.id));
+    setLoadingTasks(prev => new Set(prev).add(tippingTask.id));
+    const taskObj = tippingTask;
+    setTippingTask(null);
+
     try {
-      const updated = await tipTask(task.id, amount);
-      setTasks(tasks => tasks.map(t => t.id === task.id ? updated : t));
+      const updated = await tipTask(taskObj.id, amount);
+      setTasks(tasks => tasks.map(t => t.id === taskObj.id ? updated : t));
       
       const u = await getUserProfile();
       setLuffies(u.luffies || 0);
       
       // refresh events if open
-      if (expandedActivity === task.id) {
-        const evts = await getTaskEvents(task.id);
-        setTaskActivities(prev => ({ ...prev, [task.id]: evts }));
+      if (expandedActivity === taskObj.id) {
+        const evts = await getTaskEvents(taskObj.id);
+        setTaskActivities(prev => ({ ...prev, [taskObj.id]: evts }));
       }
-    } catch (err) {
-      alert(err.response?.data?.detail || "Failed to tip task");
+    } catch (error) {
+      alert(error.response?.data?.detail || "Failed to tip");
     } finally {
-      setLoadingTasks(prev => { const next = new Set(prev); next.delete(task.id); return next; });
+      setLoadingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(taskObj.id);
+        return next;
+      });
     }
   };
 
@@ -437,7 +451,7 @@ export default function Dashboard() {
                         </svg>
                       </button>
                       {task.user_id === currentUserId && task.assigned_to_id && task.is_completed && !task.tipped_amount && (
-                        <button className="icon-btn edit" onClick={() => handleTip(task)} title="Send Tip" style={{ color: '#af9f5d' }} disabled={loadingTasks.has(task.id)}>✦</button>
+                        <button className="icon-btn edit" onClick={() => openTipModal(task)} title="Send Tip" style={{ color: '#af9f5d' }} disabled={loadingTasks.has(task.id)}>✦</button>
                       )}
                     </div>
                   </div>
@@ -644,6 +658,37 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {tippingTask && (
+        <div className="mac-modal-overlay">
+          <div className="mac-modal" style={{ '--task-color': '253, 246, 227', width: '320px', height: 'auto' }}>
+            <div className="mac-header" style={{ justifyContent: 'space-between' }}>
+              <h2 className="mac-title" style={{ fontSize: '16px', margin: 0 }}>Tip Whuffies</h2>
+              <div className="mac-controls">
+                <button className="mac-btn red" onClick={() => setTippingTask(null)} title="Close"></button>
+              </div>
+            </div>
+            <div className="mac-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px' }}>
+              <p style={{ margin: 0, fontSize: '14px', opacity: 0.8 }}>
+                How many Whuffies would you like to tip for <strong>{tippingTask.title}</strong>?
+              </p>
+              <form onSubmit={submitTip} style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="number"
+                  min="1"
+                  value={tipAmount}
+                  onChange={(e) => setTipAmount(e.target.value)}
+                  placeholder="Amount"
+                  autoFocus
+                  style={{ flexGrow: 1, padding: '8px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)' }}
+                />
+                <button type="submit" className="icon-btn edit" style={{ padding: '0 16px', fontSize: '14px', color: '#af9f5d' }}>Tip</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {expandedActivity && (
         <div className="mac-modal-overlay">
           <div className="mac-modal" style={{ '--task-color': '253, 246, 227', width: '500px', height: 'auto', minHeight: '300px' }}>
