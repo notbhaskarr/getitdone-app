@@ -10,13 +10,13 @@ import "./Dashboard.css";
 function formatTimestamp(dateString) {
   if (!dateString) return "Unknown";
   const date = new Date(dateString.endsWith('Z') ? dateString : dateString + 'Z');
-  
+
   const dd = String(date.getDate()).padStart(2, '0');
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const yyyy = date.getFullYear();
   const hh = String(date.getHours()).padStart(2, '0');
   const min = String(date.getMinutes()).padStart(2, '0');
-  
+
   return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
 }
 
@@ -25,14 +25,16 @@ export default function Dashboard() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editAssigneeId, setEditAssigneeId] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
   const [userName, setUserName] = useState("");
   const [luffies, setLuffies] = useState(0);
   const [currentUserId, setCurrentUserId] = useState(null);
-  
+
   const [peers, setPeers] = useState([]);
   const [isNetworkModalOpen, setIsNetworkModalOpen] = useState(false);
   const [peerEmail, setPeerEmail] = useState("");
@@ -84,11 +86,11 @@ export default function Dashboard() {
 
     const baseUrl = import.meta.env.VITE_API_URL || "https://getitdone-app.onrender.com";
     const wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://") + `/ws/${token}`;
-    
+
     let ws;
     try {
       ws = new WebSocket(wsUrl);
-      
+
       ws.onmessage = (e) => {
         try {
           const msg = JSON.parse(e.data);
@@ -105,12 +107,12 @@ export default function Dashboard() {
           } else if (msg.type === "NOTIFICATION") {
             const notifId = Date.now();
             setNotifications(prev => [...prev, { id: notifId, ...msg }]);
-            
+
             // Auto dismiss after 5s
             setTimeout(() => {
               setNotifications(prev => prev.filter(n => n.id !== notifId));
             }, 5000);
-            
+
             // Auto refresh state
             loadData();
           }
@@ -118,9 +120,9 @@ export default function Dashboard() {
           console.error("Failed to parse WS message", e);
         }
       };
-      
+
       ws.onerror = (e) => console.error("WebSocket error", e);
-    } catch(e) {
+    } catch (e) {
       console.error("Failed to setup WebSocket", e);
     }
 
@@ -134,11 +136,13 @@ export default function Dashboard() {
     if (!title.trim()) return;
 
     try {
-      const newTask = await createTask(title, description, assigneeId ? assigneeId : undefined);
+      const formattedDueDate = dueDate ? new Date(dueDate).toISOString() : undefined;
+      const newTask = await createTask(title, description, assigneeId ? assigneeId : undefined, formattedDueDate);
       setTasks([...tasks, newTask]);
       setTitle("");
       setDescription("");
       setAssigneeId("");
+      setDueDate("");
       setIsCreatingTask(false);
       // reload luffies as escrow might have deducted points
       if (assigneeId) {
@@ -163,7 +167,7 @@ export default function Dashboard() {
 
     const isNowCompleted = !task.is_completed;
     const reward = task.reward_luffies ?? 3;
-    
+
     // Optimistic update
     setLuffies(prev => isNowCompleted ? prev + reward : Math.max(0, prev - reward));
     setTasks(tasks.map(t => t.id === task.id ? { ...t, is_completed: isNowCompleted } : t));
@@ -194,10 +198,12 @@ export default function Dashboard() {
 
   const handleMacSave = async () => {
     try {
-      const updated = await updateTask(maximizedTask.id, { 
-        title: editTitle, 
+      const formattedDueDate = editDueDate ? new Date(editDueDate).toISOString() : null;
+      const updated = await updateTask(maximizedTask.id, {
+        title: editTitle,
         description: editDesc,
-        assigned_to_id: editAssigneeId ? editAssigneeId : null
+        assigned_to_id: editAssigneeId ? editAssigneeId : null,
+        due_date: formattedDueDate
       });
       setTasks(tasks.map(t => (t.id === maximizedTask.id ? updated : t)));
       setMaximizedTask(updated);
@@ -233,7 +239,7 @@ export default function Dashboard() {
   const submitTip = async (e) => {
     e.preventDefault();
     if (!tippingTask) return;
-    
+
     const amount = parseInt(tipAmount, 10);
     if (isNaN(amount) || amount <= 0) {
       alert("Please enter a valid positive number.");
@@ -247,10 +253,10 @@ export default function Dashboard() {
     try {
       const updated = await tipTask(taskObj.id, amount);
       setTasks(tasks => tasks.map(t => t.id === taskObj.id ? updated : t));
-      
+
       const u = await getUserProfile();
       setLuffies(u.luffies || 0);
-      
+
       // refresh events if open
       if (expandedActivity === taskObj.id) {
         const evts = await getTaskEvents(taskObj.id);
@@ -368,7 +374,7 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
-      
+
 
       <div style={{ padding: '0 24px', display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
         {['All', 'To Do', 'Delegated', 'Completed'].map(f => {
@@ -405,14 +411,15 @@ export default function Dashboard() {
             {(() => {
               let filteredTasks = selectedDate
                 ? tasks.filter(task => {
-                  if (!task.created_at) return false;
-                  const d1 = new Date(task.created_at + 'Z');
-                  return d1.getFullYear() === selectedDate.getFullYear() &&
-                    d1.getMonth() === selectedDate.getMonth() &&
-                    d1.getDate() === selectedDate.getDate();
+                  if (!task.due_date) return false;
+                  const taskYMD = task.due_date.substring(0, 10);
+                  const selY = selectedDate.getFullYear();
+                  const selM = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                  const selD = String(selectedDate.getDate()).padStart(2, '0');
+                  return taskYMD === `${selY}-${selM}-${selD}`;
                 })
                 : tasks;
-                
+
               if (taskFilter === 'todo') {
                 filteredTasks = filteredTasks.filter(t => !t.is_completed && (!t.assigned_to_id || t.assigned_to_id === currentUserId));
               } else if (taskFilter === 'delegated') {
@@ -446,11 +453,19 @@ export default function Dashboard() {
                       disabled={(task.assigned_to_id && task.user_id === currentUserId) || loadingTasks.has(task.id)}
                       onChange={() => handleToggleComplete(task)}
                     />
+
                     <div className="task-content" onClick={(e) => {
                       setMaximizedTask(task);
                       setEditTitle(task.title);
                       setEditDesc(task.description || "");
                       setEditAssigneeId(task.assigned_to_id || "");
+
+                      if (task.due_date) {
+                        setEditDueDate(task.due_date.substring(0, 10));
+                      } else {
+                        setEditDueDate("");
+                      }
+
                       setIsMacEditing(false);
                     }} style={{ cursor: 'pointer' }}>
                       <div className="task-title">{task.title}</div>
@@ -465,6 +480,19 @@ export default function Dashboard() {
                           Assigned by: {peers.find(p => p.peer_id === task.user_id)?.peer_name || "Peer"}
                         </div>
                       )}
+                      {task.due_date && (() => {
+                        const dueDateObj = new Date(task.due_date.endsWith('Z') ? task.due_date : task.due_date + 'Z');
+                        // Set current time to start of day for comparison
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const isOverdue = !task.is_completed && dueDateObj < today;
+                        const dateString = dueDateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                        return (
+                          <div style={{ fontSize: '11px', marginTop: '6px', fontWeight: 500, color: isOverdue ? '#ff4d4d' : 'var(--text)', opacity: isOverdue ? 1 : 0.6 }}>
+                            📅 {dateString} {isOverdue && "(Overdue)"}
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="task-actions">
                       <button className="icon-btn activity" onClick={() => toggleActivity(task.id)} title="Activity History">
@@ -477,7 +505,7 @@ export default function Dashboard() {
                       )}
                     </div>
                   </div>
-              );
+                );
               });
             })()}
           </div>
@@ -554,10 +582,10 @@ export default function Dashboard() {
                         rows={5}
                       />
                       {maximizedTask.user_id === currentUserId && (
-                            <select 
-                              className="mac-desc-input"
-                              style={{ marginTop: '16px', background: 'transparent', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', cursor: 'pointer', paddingBottom: '8px' }}
-                              value={editAssigneeId} 
+                        <select
+                          className="mac-desc-input"
+                          style={{ marginTop: '16px', background: 'transparent', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', cursor: 'pointer', paddingBottom: '8px' }}
+                          value={editAssigneeId}
                           onChange={(e) => setEditAssigneeId(e.target.value)}
                         >
                           <option value="">Assign the task</option>
@@ -566,12 +594,31 @@ export default function Dashboard() {
                           ))}
                         </select>
                       )}
+                      <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '14px' }}>
+                        <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', opacity: 0.8, whiteSpace: 'nowrap', flexShrink: 0 }}>Due Date:</label>
+                        <input
+                          type="date"
+                          style={{ background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', padding: '4px 0', cursor: 'pointer', color: 'var(--text)', outline: 'none', flexGrow: 1 }}
+                          value={editDueDate}
+                          onChange={(e) => setEditDueDate(e.target.value)}
+                          onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
+                        />
+                      </div>
                     </>
                   ) : (
                     <>
                       <h1 className="mac-title">{maximizedTask.title}</h1>
+                      
+                      {maximizedTask.due_date && (
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-h)', opacity: 0.9, marginTop: '-4px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          📅 Due Date: {new Date(maximizedTask.due_date.substring(0, 10)).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                        </div>
+                      )}
+
                       {maximizedTask.description ? (
-                        <ReactMarkdown className="mac-desc">{maximizedTask.description}</ReactMarkdown>
+                        <div className="mac-desc">
+                          <ReactMarkdown>{maximizedTask.description}</ReactMarkdown>
+                        </div>
                       ) : (
                         <p className="mac-desc" style={{ opacity: 0.5 }}>No description provided.</p>
                       )}
@@ -615,10 +662,10 @@ export default function Dashboard() {
                   placeholder="Description and Details"
                   rows={5}
                 />
-                <select 
+                <select
                   className="mac-desc-input"
                   style={{ marginTop: '16px', background: 'transparent', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', cursor: 'pointer', paddingBottom: '8px' }}
-                  value={assigneeId} 
+                  value={assigneeId}
                   onChange={(e) => setAssigneeId(e.target.value)}
                 >
                   <option value="">Assign the task</option>
@@ -626,6 +673,16 @@ export default function Dashboard() {
                     <option key={p.peer_id} value={p.peer_id}>Assigned to : {p.peer_name}</option>
                   ))}
                 </select>
+                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', opacity: 0.8, whiteSpace: 'nowrap', flexShrink: 0 }}>Due Date:</label>
+                  <input
+                    type="date"
+                    style={{ background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', padding: '4px 0', cursor: 'pointer', color: 'var(--text)', outline: 'none', flexGrow: 1 }}
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -651,7 +708,7 @@ export default function Dashboard() {
                 />
                 <button type="submit" className="icon-btn edit" style={{ padding: '0 12px', fontSize: '12px' }}>{requestBtnText}</button>
               </form>
-              
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <h3 style={{ fontSize: '12px', textTransform: 'uppercase', opacity: 0.5, margin: '8px 0 0' }}>Your Connections</h3>
                 {peers.length === 0 ? (
@@ -752,7 +809,7 @@ export default function Dashboard() {
                         } else {
                           messageNode = <span className="activity-message"> - {evt.user_name} <strong>{evt.event_type.toLowerCase()}</strong>{['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : ''}{evt.details && evt.event_type !== 'TIPPED' ? ` - ${evt.details}` : ''}{evt.event_type === 'TIPPED' ? ` ${evt.details.replace('Tipped ', '')}` : ''}</span>;
                         }
-                        
+
                         return (
                           <div key={evt.id} className="activity-item">
                             <span className="activity-time">{formatTimestamp(evt.created_at)}</span>

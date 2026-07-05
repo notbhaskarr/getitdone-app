@@ -55,6 +55,7 @@ class TaskCreate(BaseModel):
     description: Optional[str] = None
     reward_luffies: Optional[int] = 3
     assigned_to_id: Optional[UUID] = None
+    due_date: Optional[datetime] = None
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
@@ -63,6 +64,7 @@ class TaskUpdate(BaseModel):
     reward_luffies: Optional[int] = None
     assigned_to_id: Optional[UUID] = None
     is_rejected: Optional[bool] = False
+    due_date: Optional[datetime] = None
 
 class TaskTipRequest(BaseModel):
     amount: int

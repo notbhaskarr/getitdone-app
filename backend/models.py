@@ -52,6 +52,7 @@ class Task(Base):
     is_rejected = Column(Boolean, default=False)
     reward_luffies = Column(Integer, default=3)
     tipped_amount = Column(Integer, default=0)
+    due_date = Column(TIMESTAMP, nullable=True)
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
     updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
 

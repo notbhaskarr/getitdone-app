@@ -684,3 +684,9 @@
     transform: translateX(0);
   }
 }
+
+/* Hide native calendar icon in date inputs since we open it on click */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}

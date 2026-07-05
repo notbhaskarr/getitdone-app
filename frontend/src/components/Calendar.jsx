@@ -32,11 +32,15 @@ export default function Calendar({ tasks, selectedDate, onSelectDate }) {
            d1.getDate() === d2.getDate();
   };
 
-  // Convert task creation dates (UTC) to local dates for the calendar dots
-  const taskDates = tasks.map(task => task.created_at ? new Date(task.created_at + 'Z') : null).filter(Boolean);
+  // Extract task YYYY-MM-DD from due dates
+  const taskDateStrs = tasks.filter(t => t.due_date).map(t => t.due_date.substring(0, 10));
 
   const hasTaskOnDate = (date) => {
-    return taskDates.some(taskDate => isSameDay(taskDate, date));
+    const selY = date.getFullYear();
+    const selM = String(date.getMonth() + 1).padStart(2, '0');
+    const selD = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${selY}-${selM}-${selD}`;
+    return taskDateStrs.includes(dateStr);
   };
 
   const handleDateClick = (day) => {

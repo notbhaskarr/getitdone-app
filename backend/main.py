@@ -302,7 +302,8 @@ def create_task(
         description=task.description,
         reward_luffies=task.reward_luffies,
         user_id=current_user.id,
-        assigned_to_id=task.assigned_to_id
+        assigned_to_id=task.assigned_to_id,
+        due_date=task.due_date
     )
 
     db.add(new_task)
@@ -436,6 +437,7 @@ def update_task(
     is_owner = (task.user_id == current_user.id)
     is_assignee = (task.assigned_to_id == current_user.id)
     update_data = update.dict(exclude_unset=True)
+    print(f"DEBUG update_data: {update_data}")
 
     # 1. Handle Assignee Rejection
     if is_assignee and not is_owner and update_data.get("is_rejected"):
@@ -480,6 +482,8 @@ def update_task(
         task.title = update_data["title"]
     if "description" in update_data:
         task.description = update_data["description"]
+    if "due_date" in update_data:
+        task.due_date = update_data["due_date"]
 
     # Owner assignment/revocation
     if "assigned_to_id" in update_data:
