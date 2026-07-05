@@ -670,7 +670,7 @@ export default function Dashboard() {
             </div>
             <div className="mac-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px' }}>
               <p style={{ margin: 0, fontSize: '14px', opacity: 0.8 }}>
-                How many Whuffies would you like to tip for <strong>{tippingTask.title}</strong>?
+                How many whuffies would you like to tip <strong>{peers.find(p => p.peer_id === tippingTask.assigned_to_id)?.peer_name || 'them'}</strong> for this task?
               </p>
               <form onSubmit={submitTip} style={{ display: 'flex', gap: '8px' }}>
                 <input
