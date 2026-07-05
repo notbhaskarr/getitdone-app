@@ -13,11 +13,11 @@ function formatTimestamp(dateString) {
   
   const dd = String(date.getDate()).padStart(2, '0');
   const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const yy = String(date.getFullYear()).slice(-2);
+  const yyyy = date.getFullYear();
   const hh = String(date.getHours()).padStart(2, '0');
   const min = String(date.getMinutes()).padStart(2, '0');
   
-  return `${dd}:${mm}:${yy}:${hh}:${min}`;
+  return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
 }
 
 export default function Dashboard() {
@@ -661,7 +661,7 @@ export default function Dashboard() {
                       {taskActivities[expandedActivity].map(evt => (
                         <div key={evt.id} className="activity-item">
                           <span className="activity-time">{formatTimestamp(evt.created_at)}</span>
-                          <span className="activity-message"> - {evt.message || `${evt.user_name} ${evt.event_type}`}</span>
+                          <span className="activity-message"> - {evt.user_name} {evt.event_type}{['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : ''}{evt.details ? ` - ${evt.details}` : ''}</span>
                         </div>
                       ))}
                     </div>
