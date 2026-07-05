@@ -272,7 +272,7 @@ def create_task(
         db.add(TaskEvent(task_id=new_task.id, user_id=current_user.id, event_type="ASSIGNED", details=f"Assigned to peer {new_task.assigned_to_id}"))
         background_tasks.add_task(
             manager.send_personal_message,
-            {"type": "NOTIFICATION", "event": "ASSIGNED", "message": f"{current_user.name} assigned a task to you: {new_task.title}", "task_id": str(new_task.id)},
+            {"type": "NOTIFICATION", "event": "ASSIGNED", "actor": current_user.name, "action": "assigned a task to you:", "task_title": new_task.title, "task_id": str(new_task.id)},
             str(new_task.assigned_to_id)
         )
     db.commit()
@@ -404,7 +404,7 @@ def update_task(
         db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="REJECTED"))
         background_tasks.add_task(
             manager.send_personal_message,
-            {"type": "NOTIFICATION", "event": "REJECTED", "message": f"{current_user.name} rejected your task: {task.title}", "task_id": str(task.id)},
+            {"type": "NOTIFICATION", "event": "REJECTED", "actor": current_user.name, "action": "rejected your task:", "task_title": task.title, "task_id": str(task.id)},
             str(task.user_id)
         )
         db.commit()
@@ -420,7 +420,7 @@ def update_task(
                 db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="COMPLETED"))
                 background_tasks.add_task(
                     manager.send_personal_message,
-                    {"type": "NOTIFICATION", "event": "COMPLETED", "message": f"{current_user.name} completed your task: {task.title}", "task_id": str(task.id)},
+                    {"type": "NOTIFICATION", "event": "COMPLETED", "actor": current_user.name, "action": "completed your task:", "task_title": task.title, "task_id": str(task.id)},
                     str(task.user_id)
                 )
             else:
@@ -454,7 +454,7 @@ def update_task(
                 db_current_user.luffies -= task.reward_luffies
                 background_tasks.add_task(
                     manager.send_personal_message,
-                    {"type": "NOTIFICATION", "event": "ASSIGNED", "message": f"{current_user.name} assigned a task to you: {task.title}", "task_id": str(task.id)},
+                    {"type": "NOTIFICATION", "event": "ASSIGNED", "actor": current_user.name, "action": "assigned a task to you:", "task_title": task.title, "task_id": str(task.id)},
                     str(new_assignee_id)
                 )
             
@@ -554,7 +554,7 @@ def tip_task(
     db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="TIPPED", details=f"Tipped {tip.amount} Whuffies"))
     background_tasks.add_task(
         manager.send_personal_message,
-        {"type": "NOTIFICATION", "event": "TIPPED", "message": f"{current_user.name} tipped you {tip.amount} Whuffies for {task.title}!", "task_id": str(task.id)},
+        {"type": "NOTIFICATION", "event": "TIPPED", "actor": current_user.name, "action": f"tipped you {tip.amount} Whuffies for", "task_title": task.title, "task_id": str(task.id)},
         str(task.assigned_to_id)
     )
 

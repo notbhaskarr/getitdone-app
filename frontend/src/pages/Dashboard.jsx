@@ -685,7 +685,9 @@ export default function Dashboard() {
       <div className="mac-toast-container">
         {notifications.map(notif => (
           <div key={notif.id} className="mac-toast" onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}>
-            <div className="toast-message">{notif.message}</div>
+            <div className="toast-message">
+              <strong>{notif.actor}</strong> {notif.action} <strong>{notif.task_title}</strong>{notif.event === 'TIPPED' ? '!' : ''}
+            </div>
           </div>
         ))}
       </div>
