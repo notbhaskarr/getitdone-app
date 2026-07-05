@@ -661,7 +661,7 @@ export default function Dashboard() {
                       {taskActivities[expandedActivity].map(evt => (
                         <div key={evt.id} className="activity-item">
                           <span className="activity-time">{formatTimestamp(evt.created_at)}</span>
-                          <span className="activity-message"> - {evt.user_name} {evt.event_type.toLowerCase()}{['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : ''}{evt.details ? ` - ${evt.details}` : ''}</span>
+                          <span className="activity-message"> - {evt.user_name} <strong>{evt.event_type.toLowerCase()}</strong>{['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : ''}{evt.details ? ` - ${evt.details}` : ''}</span>
                         </div>
                       ))}
                     </div>
