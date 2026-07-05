@@ -326,7 +326,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="dashboard-wrapper">
+    <div className="dashboard-container">
       <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
       <div className={`hidden-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <Calendar
@@ -411,8 +411,8 @@ export default function Dashboard() {
             {(() => {
               let filteredTasks = selectedDate
                 ? tasks.filter(task => {
-                  if (!task.due_date) return false;
-                  const taskYMD = task.due_date.substring(0, 10);
+                  if (!task.created_at) return false;
+                  const taskYMD = task.created_at.substring(0, 10);
                   const selY = selectedDate.getFullYear();
                   const selM = String(selectedDate.getMonth() + 1).padStart(2, '0');
                   const selD = String(selectedDate.getDate()).padStart(2, '0');

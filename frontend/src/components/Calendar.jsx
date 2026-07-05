@@ -32,8 +32,8 @@ export default function Calendar({ tasks, selectedDate, onSelectDate }) {
            d1.getDate() === d2.getDate();
   };
 
-  // Extract task YYYY-MM-DD from due dates
-  const taskDateStrs = tasks.filter(t => t.due_date).map(t => t.due_date.substring(0, 10));
+  // Extract task YYYY-MM-DD from created_at
+  const taskDateStrs = tasks.filter(t => t.created_at).map(t => t.created_at.substring(0, 10));
 
   const hasTaskOnDate = (date) => {
     const selY = date.getFullYear();
