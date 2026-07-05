@@ -61,6 +61,7 @@ export default function LoginPage() {
           placeholder="Username"
           value={email}
           onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
+          onFocus={() => clearError("email")}
         />
 
         <input
@@ -69,6 +70,7 @@ export default function LoginPage() {
           type="password"
           value={password}
           onChange={(e) => { setPassword(e.target.value); clearError("password"); }}
+          onFocus={() => clearError("password")}
         />
 
         <button className="auth-btn" onClick={handleLogin}>Get in</button>

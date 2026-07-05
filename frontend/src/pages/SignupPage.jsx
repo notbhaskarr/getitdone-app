@@ -76,6 +76,7 @@ export default function SignupPage() {
           placeholder="Name"
           value={name}
           onChange={(e) => { setName(e.target.value); clearError("name"); }}
+          onFocus={() => clearError("name")}
         />
 
         <input
@@ -83,6 +84,7 @@ export default function SignupPage() {
           placeholder="Username"
           value={email}
           onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
+          onFocus={() => clearError("email")}
         />
 
         <input
@@ -91,6 +93,7 @@ export default function SignupPage() {
           type="password"
           value={password}
           onChange={(e) => { setPassword(e.target.value); clearError("password"); }}
+          onFocus={() => clearError("password")}
         />
 
         <button className="auth-btn" onClick={handleSignup}>Join in</button>
