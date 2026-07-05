@@ -7,33 +7,53 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isError, setIsError] = useState(false);
-  const [isShaking, setIsShaking] = useState(false);
+  const [errorField, setErrorField] = useState(null); // 'name', 'email', 'password', or 'all'
 
   const navigate = useNavigate();
 
-  const triggerError = () => {
-    setIsError(true);
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 400);
+  const triggerError = (field) => {
+    setErrorField(field);
+    setTimeout(() => {
+      // Clear shake after animation, but keep border until typing
+      // Since shake is CSS animation, we just re-trigger by clearing it if needed,
+      // but actually we can just leave the class, animation runs once.
+      // Wait, if they click submit again, we want it to shake again.
+      setErrorField(null);
+      setTimeout(() => setErrorField(field), 10);
+    }, 0);
   };
 
-  const clearError = () => {
-    if (isError) setIsError(false);
+  const clearError = (field) => {
+    if (errorField === field || errorField === 'all') setErrorField(null);
   };
 
   const handleSignup = async () => {
     if (!name.trim()) {
-      triggerError();
+      triggerError("name");
+      return;
+    }
+    if (!email.trim()) {
+      triggerError("email");
+      return;
+    }
+    if (!password.trim()) {
+      triggerError("password");
       return;
     }
     
     try {
-      setIsError(false);
+      setErrorField(null);
       await signup(name, email, password);
       navigate("/login");
     } catch (err) {
-      triggerError();
+      const msg = err?.response?.data?.detail;
+      if (msg && msg.toLowerCase().includes("username")) {
+        triggerError("email");
+      } else if (msg && msg.toLowerCase().includes("password")) {
+        triggerError("password");
+      } else {
+        triggerError("all");
+      }
     }
   };
 
@@ -50,27 +70,27 @@ export default function SignupPage() {
         <h2 className="auth-logo">GETitDONE</h2>
       </div>
 
-      <div className={`auth-card${isShaking ? " shake" : ""}`}>
+      <div className="auth-card">
         <input
-          className={`auth-input${isError ? " error-border" : ""}`}
+          className={`auth-input${errorField === 'name' || errorField === 'all' ? " error-border shake" : ""}`}
           placeholder="Name"
           value={name}
-          onChange={(e) => { setName(e.target.value); clearError(); }}
+          onChange={(e) => { setName(e.target.value); clearError("name"); }}
         />
 
         <input
-          className={`auth-input${isError ? " error-border" : ""}`}
+          className={`auth-input${errorField === 'email' || errorField === 'all' ? " error-border shake" : ""}`}
           placeholder="Username"
           value={email}
-          onChange={(e) => { setEmail(e.target.value); clearError(); }}
+          onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
         />
 
         <input
-          className={`auth-input${isError ? " error-border" : ""}`}
+          className={`auth-input${errorField === 'password' || errorField === 'all' ? " error-border shake" : ""}`}
           placeholder="Password"
           type="password"
           value={password}
-          onChange={(e) => { setPassword(e.target.value); clearError(); }}
+          onChange={(e) => { setPassword(e.target.value); clearError("password"); }}
         />
 
         <button className="auth-btn" onClick={handleSignup}>Join in</button>

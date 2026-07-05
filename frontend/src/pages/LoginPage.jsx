@@ -6,34 +6,39 @@ import "./Auth.css";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isError, setIsError] = useState(false);
-  const [isShaking, setIsShaking] = useState(false);
+  const [errorField, setErrorField] = useState(null); // 'email', 'password', or 'all'
 
   const navigate = useNavigate();
 
-  const triggerError = () => {
-    setIsError(true);
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 400);
+  const triggerError = (field) => {
+    setErrorField(field);
+    setTimeout(() => {
+      setErrorField(null);
+      setTimeout(() => setErrorField(field), 10);
+    }, 0);
   };
 
-  const clearError = () => {
-    if (isError) setIsError(false);
+  const clearError = (field) => {
+    if (errorField === field || errorField === 'all') setErrorField(null);
   };
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      triggerError();
+    if (!email.trim()) {
+      triggerError("email");
+      return;
+    }
+    if (!password.trim()) {
+      triggerError("password");
       return;
     }
 
     try {
-      setIsError(false);
+      setErrorField(null);
       const data = await login(email, password);
       localStorage.setItem("token", data.access_token);
       navigate("/dashboard");
     } catch (err) {
-      triggerError();
+      triggerError("all");
     }
   };
 
@@ -50,20 +55,20 @@ export default function LoginPage() {
         <h2 className="auth-logo">GETitDONE</h2>
       </div>
 
-      <div className={`auth-card${isShaking ? " shake" : ""}`}>
+      <div className="auth-card">
         <input
-          className={`auth-input${isError ? " error-border" : ""}`}
+          className={`auth-input${errorField === 'email' || errorField === 'all' ? " error-border shake" : ""}`}
           placeholder="Username"
           value={email}
-          onChange={(e) => { setEmail(e.target.value); clearError(); }}
+          onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
         />
 
         <input
-          className={`auth-input${isError ? " error-border" : ""}`}
+          className={`auth-input${errorField === 'password' || errorField === 'all' ? " error-border shake" : ""}`}
           placeholder="Password"
           type="password"
           value={password}
-          onChange={(e) => { setPassword(e.target.value); clearError(); }}
+          onChange={(e) => { setPassword(e.target.value); clearError("password"); }}
         />
 
         <button className="auth-btn" onClick={handleLogin}>Get in</button>
