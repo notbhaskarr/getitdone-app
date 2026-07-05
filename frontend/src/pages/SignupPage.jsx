@@ -7,19 +7,17 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
 
   const handleSignup = async () => {
     try {
+      setError(null);
       await signup(name, email, password);
-
-      alert("Signup successful");
-
       navigate("/login");
     } catch (err) {
-      alert("Signup failed");
-      console.log(err?.response?.data || err.message);
+      setError(err?.response?.data?.detail || "Signup failed. Please try again.");
     }
   };
 
@@ -37,6 +35,7 @@ export default function SignupPage() {
       </div>
 
       <div className="auth-card">
+        {error && <div className="auth-error">{error}</div>}
         <input
           className="auth-input"
           placeholder="Name"

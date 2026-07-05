@@ -6,19 +6,18 @@ import "./Auth.css";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
+      setError(null);
       const data = await login(email, password);
-
       localStorage.setItem("token", data.access_token);
-
       navigate("/dashboard");
     } catch (err) {
-      alert("Login failed");
-      console.log(err?.response?.data || err.message);
+      setError(err?.response?.data?.detail || "Login failed. Please check your credentials.");
     }
   };
 
@@ -36,6 +35,7 @@ export default function LoginPage() {
       </div>
 
       <div className="auth-card">
+        {error && <div className="auth-error">{error}</div>}
         <input
           className="auth-input"
           placeholder="Username"

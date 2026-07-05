@@ -118,3 +118,9 @@
   font-weight: 500;
   letter-spacing: 0.5px;
 }
+.auth-error {
+  color: #ff4d4d;
+  font-size: 13px;
+  margin-bottom: 12px;
+  text-align: center;
+}
