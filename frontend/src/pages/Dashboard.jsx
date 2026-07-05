@@ -326,7 +326,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-wrapper">
       <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
       <div className={`hidden-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <Calendar
