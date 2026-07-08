@@ -24,9 +24,9 @@ const getDeterministicColorIndex = (uuid) => {
   if (!uuid) return 0;
   let hash = 0;
   for (let i = 0; i < uuid.length; i++) {
-    hash += uuid.charCodeAt(i);
+    hash = uuid.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return hash;
+  return Math.abs(hash);
 };
 
 export default function Dashboard() {
