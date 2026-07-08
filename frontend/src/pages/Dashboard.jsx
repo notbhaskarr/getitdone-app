@@ -20,7 +20,17 @@ function formatTimestamp(dateString) {
   return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
 }
 
+const getDeterministicColorIndex = (uuid) => {
+  if (!uuid) return 0;
+  let hash = 0;
+  for (let i = 0; i < uuid.length; i++) {
+    hash += uuid.charCodeAt(i);
+  }
+  return hash;
+};
+
 export default function Dashboard() {
+  const currentUserId = localStorage.getItem("user_id");
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -525,8 +535,7 @@ export default function Dashboard() {
               "212, 163, 115",
               "157, 129, 137"
             ];
-            const taskIndex = tasks.findIndex(t => t.id === activeSubtaskTask.id);
-            const colorIndex = taskIndex !== -1 ? taskIndex : 0;
+            const colorIndex = getDeterministicColorIndex(activeSubtaskTask.id);
             const taskColorRGB = colors[colorIndex % colors.length];
 
             return (
@@ -633,7 +642,7 @@ export default function Dashboard() {
                 return <p style={{ textAlign: "center", color: "var(--text)" }}>{selectedDate ? "No tasks for this date." : "No tasks yet. Create one!"}</p>;
               }
 
-              return filteredTasks.map((task, index) => {
+              return filteredTasks.map((task) => {
                 const colors = [
                   "162, 178, 150",
                   "224, 122, 95",
@@ -643,7 +652,8 @@ export default function Dashboard() {
                   "212, 163, 115",
                   "157, 129, 137"
                 ];
-                const taskColorRGB = colors[index % colors.length];
+                const colorIndex = getDeterministicColorIndex(task.id);
+                const taskColorRGB = colors[colorIndex % colors.length];
 
                 return (
                   <div key={task.id} className={`task-card ${task.is_completed ? 'completed' : ''}`} style={{ '--task-color': taskColorRGB }}>
@@ -730,8 +740,7 @@ export default function Dashboard() {
           "212, 163, 115",
           "157, 129, 137"
         ];
-        const taskIndex = tasks.findIndex(t => t.id === maximizedTask.id);
-        const colorIndex = taskIndex !== -1 ? taskIndex : 0;
+        const colorIndex = getDeterministicColorIndex(maximizedTask.id);
         const taskColorRGB = colors[colorIndex % colors.length];
 
         return (
