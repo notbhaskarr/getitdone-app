@@ -30,7 +30,6 @@ const getDeterministicColorIndex = (uuid) => {
 };
 
 export default function Dashboard() {
-  const currentUserId = localStorage.getItem("user_id");
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
