@@ -46,7 +46,6 @@ export default function Dashboard() {
   const [isMacEditing, setIsMacEditing] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [expandedActivity, setExpandedActivity] = useState(null);
   const [taskActivities, setTaskActivities] = useState({});
   const [loadingTasks, setLoadingTasks] = useState(new Set());
   const [taskFilter, setTaskFilter] = useState('all');
@@ -71,6 +70,17 @@ export default function Dashboard() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [activeSubtaskTask]);
+
+  useEffect(() => {
+    if (maximizedTask) {
+      const taskId = maximizedTask.id;
+      if (!taskActivities[taskId]) {
+        getTaskEvents(taskId).then(evts => {
+          setTaskActivities(prev => ({ ...prev, [taskId]: evts }));
+        }).catch(err => console.error("Failed to fetch events", err));
+      }
+    }
+  }, [maximizedTask]);
 
   const navigate = useNavigate();
 
@@ -385,21 +395,7 @@ export default function Dashboard() {
     }
   };
 
-  const toggleActivity = async (taskId) => {
-    if (expandedActivity === taskId) {
-      setExpandedActivity(null);
-      return;
-    }
-    setExpandedActivity(taskId);
-    if (!taskActivities[taskId]) {
-      try {
-        const evts = await getTaskEvents(taskId);
-        setTaskActivities(prev => ({ ...prev, [taskId]: evts }));
-      } catch (err) {
-        console.error("Failed to fetch events", err);
-      }
-    }
-  };
+
 
   const handlePeerRequest = async (e) => {
     e.preventDefault();
@@ -697,11 +693,7 @@ export default function Dashboard() {
                           <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                         </svg>
                       </button>
-                      <button className="icon-btn activity" onClick={() => toggleActivity(task.id)} title="Activity History">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', opacity: 0.7 }}>
-                          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                        </svg>
-                      </button>
+
                       {task.user_id === currentUserId && task.assigned_to_id && task.is_completed && !task.tipped_amount && (
                         <button className="icon-btn edit" onClick={() => openTipModal(task)} title="Send Tip" style={{ color: '#af9f5d' }} disabled={loadingTasks.has(task.id)}>✦</button>
                       )}
@@ -828,9 +820,52 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                <div className="mac-meta" style={{ marginTop: 'auto', paddingTop: '32px', fontSize: '13px', opacity: 0.5, textAlign: 'right', fontFamily: 'var(--sans)' }}>
+                <div className="mac-meta" style={{ marginTop: 'auto', paddingTop: '32px', fontSize: '13px', opacity: 0.5, textAlign: 'right', fontFamily: 'var(--sans)', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                   <div>Created on: {maximizedTask.created_at ? new Date(maximizedTask.created_at + 'Z').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown'}</div>
                 </div>
+
+                {!isMacEditing && (
+                  <div className="task-activity-panel" style={{ marginTop: '24px', paddingBottom: '32px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-h)', marginBottom: '16px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Activity History</h3>
+                    {taskActivities[maximizedTask.id] ? (
+                      taskActivities[maximizedTask.id].length > 0 ? (
+                        <div className="activity-list">
+                          {taskActivities[maximizedTask.id].map(evt => {
+                            let messageNode;
+                            if (evt.event_type === "ASSIGNED") {
+                              if (evt.details && evt.details.includes("Assigned to peer")) {
+                                const peerId = evt.details.replace("Assigned to peer ", "");
+                                let peerName = "someone";
+                                if (peerId === currentUserId) {
+                                  peerName = "you";
+                                } else {
+                                  const peerObj = peers.find(p => p.peer_id === peerId);
+                                  if (peerObj) peerName = peerObj.peer_name;
+                                }
+                                messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task to {peerName}.</span>;
+                              } else {
+                                messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task{evt.details ? ` - ${evt.details}` : ''}</span>;
+                              }
+                            } else {
+                              messageNode = <span className="activity-message"> - {evt.user_name} <strong>{evt.event_type.toLowerCase()}</strong>{['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : ''}{evt.details && evt.event_type !== 'TIPPED' ? ` - ${evt.details}` : ''}{evt.event_type === 'TIPPED' ? ` ${evt.details.replace('Tipped ', '')}` : ''}</span>;
+                            }
+
+                            return (
+                              <div key={evt.id} className="activity-item">
+                                <span className="activity-time">{formatTimestamp(evt.created_at)}</span>
+                                {messageNode}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="activity-empty">No activity recorded.</div>
+                      )
+                    ) : (
+                      <div className="activity-loading">Loading...</div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -978,59 +1013,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {expandedActivity && (
-        <div className="mac-modal-overlay">
-          <div className="mac-modal" style={{ '--task-color': '253, 246, 227', width: '500px', height: 'auto', minHeight: '300px' }}>
-            <div className="mac-header" style={{ justifyContent: 'space-between' }}>
-              <h2 className="mac-title" style={{ fontSize: '16px', margin: 0 }}>Activity History</h2>
-              <div className="mac-controls">
-                <button className="mac-btn red" onClick={() => setExpandedActivity(null)} title="Close"></button>
-              </div>
-            </div>
-            <div className="mac-content" style={{ padding: '24px' }}>
-              <div className="task-activity-panel" style={{ marginTop: 0 }}>
-                {taskActivities[expandedActivity] ? (
-                  taskActivities[expandedActivity].length > 0 ? (
-                    <div className="activity-list">
-                      {taskActivities[expandedActivity].map(evt => {
-                        let messageNode;
-                        if (evt.event_type === "ASSIGNED") {
-                          if (evt.details && evt.details.includes("Assigned to peer")) {
-                            const peerId = evt.details.replace("Assigned to peer ", "");
-                            let peerName = "someone";
-                            if (peerId === currentUserId) {
-                              peerName = "you";
-                            } else {
-                              const peerObj = peers.find(p => p.peer_id === peerId);
-                              if (peerObj) peerName = peerObj.peer_name;
-                            }
-                            messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task to {peerName}.</span>;
-                          } else {
-                            messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task{evt.details ? ` - ${evt.details}` : ''}</span>;
-                          }
-                        } else {
-                          messageNode = <span className="activity-message"> - {evt.user_name} <strong>{evt.event_type.toLowerCase()}</strong>{['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : ''}{evt.details && evt.event_type !== 'TIPPED' ? ` - ${evt.details}` : ''}{evt.event_type === 'TIPPED' ? ` ${evt.details.replace('Tipped ', '')}` : ''}</span>;
-                        }
 
-                        return (
-                          <div key={evt.id} className="activity-item">
-                            <span className="activity-time">{formatTimestamp(evt.created_at)}</span>
-                            {messageNode}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="activity-empty">No activity recorded.</div>
-                  )
-                ) : (
-                  <div className="activity-loading">Loading...</div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
 
 
