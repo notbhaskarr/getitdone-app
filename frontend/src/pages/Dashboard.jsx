@@ -628,7 +628,7 @@ export default function Dashboard() {
                   const selD = String(selectedDate.getDate()).padStart(2, '0');
                   return taskYMD === `${selY}-${selM}-${selD}`;
                 })
-                : tasks;
+                : [...tasks];
 
               if (taskFilter === 'todo') {
                 filteredTasks = filteredTasks.filter(t => !t.is_completed && (!t.assigned_to_id || t.assigned_to_id === currentUserId));
