@@ -201,9 +201,9 @@ export default function Dashboard() {
 
     try {
       const updated = await updateTask(task.id, { is_completed: isNowCompleted });
-      setTasks(tasks => tasks.map(t => (t.id === task.id ? updated : t)));
+      setTasks(tasks => tasks.map(t => (t.id === task.id ? { ...t, ...updated, subtasks: t.subtasks } : t)));
       if (maximizedTask?.id === task.id) {
-        setMaximizedTask(updated);
+        setMaximizedTask(prev => ({ ...prev, ...updated, subtasks: prev.subtasks }));
       }
     } catch (err) {
       // Revert optimistic update on failure
@@ -232,8 +232,8 @@ export default function Dashboard() {
         assigned_to_id: editAssigneeId ? editAssigneeId : null,
         due_date: formattedDueDate
       });
-      setTasks(tasks.map(t => (t.id === maximizedTask.id ? updated : t)));
-      setMaximizedTask(updated);
+      setTasks(tasks.map(t => (t.id === maximizedTask.id ? { ...t, ...updated, subtasks: t.subtasks } : t)));
+      setMaximizedTask(prev => ({ ...prev, ...updated, subtasks: prev.subtasks }));
       setIsMacEditing(false);
       if (editAssigneeId !== maximizedTask.assigned_to_id) {
         const u = await getUserProfile();
