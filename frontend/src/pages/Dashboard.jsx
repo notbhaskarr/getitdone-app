@@ -483,20 +483,12 @@ export default function Dashboard() {
                   <div className="subtask-list">
                     {(activeSubtaskTask.subtasks || []).map(st => (
                       <div key={st.id} className="subtask-item">
-                        <label className="checkbox-container">
-                          <input 
-                            type="checkbox" 
-                            checked={st.is_completed} 
-                            onChange={() => handleToggleSubtask(activeSubtaskTask.id, st.id, st.is_completed)}
-                          />
-                          <span className="checkmark" style={{ borderColor: `rgb(${taskColorRGB})`, backgroundColor: st.is_completed ? `rgb(${taskColorRGB})` : 'transparent' }}>
-                            {st.is_completed && (
-                              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                              </svg>
-                            )}
-                          </span>
-                        </label>
+                        <input 
+                          type="checkbox" 
+                          className="task-checkbox"
+                          checked={st.is_completed} 
+                          onChange={() => handleToggleSubtask(activeSubtaskTask.id, st.id, st.is_completed)}
+                        />
                         <span className={`subtask-title ${st.is_completed ? 'completed' : ''}`}>
                           {st.title}
                         </span>
