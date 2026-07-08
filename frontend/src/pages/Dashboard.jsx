@@ -638,6 +638,14 @@ export default function Dashboard() {
                 filteredTasks = filteredTasks.filter(t => t.is_completed);
               }
 
+              filteredTasks.sort((a, b) => {
+                if (a.is_completed !== b.is_completed) return a.is_completed ? 1 : -1;
+                if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date);
+                if (a.due_date) return -1;
+                if (b.due_date) return 1;
+                return new Date(b.created_at) - new Date(a.created_at);
+              });
+
               if (filteredTasks.length === 0) {
                 return <p style={{ textAlign: "center", color: "var(--text)" }}>{selectedDate ? "No tasks for this date." : "No tasks yet. Create one!"}</p>;
               }
