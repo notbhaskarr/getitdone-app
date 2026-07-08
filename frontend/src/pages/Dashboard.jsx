@@ -653,6 +653,11 @@ export default function Dashboard() {
                       checked={task.is_completed}
                       disabled={(task.assigned_to_id && task.user_id === currentUserId) || loadingTasks.has(task.id)}
                       onChange={() => handleToggleComplete(task)}
+                      style={{ 
+                        '--progress': task.subtasks && task.subtasks.length > 0 
+                          ? `${(task.subtasks.filter(st => st.is_completed).length / task.subtasks.length) * 100}%` 
+                          : '0%' 
+                      }}
                     />
 
                     <div className="task-content" onClick={(e) => {
