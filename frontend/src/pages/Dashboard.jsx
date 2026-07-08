@@ -254,19 +254,11 @@ export default function Dashboard() {
     try {
       const newSubtask = await createSubtask(activeSubtaskTask.id, newSubtaskTitle);
       
-      let updatedTask = null;
-      setTasks(prevTasks => prevTasks.map(t => {
-        if (t.id === activeSubtaskTask.id) {
-          const subtasks = t.subtasks ? [...t.subtasks, newSubtask] : [newSubtask];
-          updatedTask = { ...t, subtasks };
-          return updatedTask;
-        }
-        return t;
-      }));
+      const updatedSubtasks = activeSubtaskTask.subtasks ? [...activeSubtaskTask.subtasks, newSubtask] : [newSubtask];
+      const updatedTask = { ...activeSubtaskTask, subtasks: updatedSubtasks };
       
-      if (updatedTask) {
-        setActiveSubtaskTask(updatedTask);
-      }
+      setTasks(prevTasks => prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+      setActiveSubtaskTask(updatedTask);
       
       setNewSubtaskTitle("");
     } catch (err) {
@@ -277,18 +269,13 @@ export default function Dashboard() {
   const handleToggleSubtask = async (taskId, subtaskId, currentStatus) => {
     try {
       await updateSubtask(subtaskId, { is_completed: !currentStatus });
-      let updatedTask = null;
-      setTasks(prevTasks => prevTasks.map(t => {
-        if (t.id === taskId && t.subtasks) {
-          const subtasks = t.subtasks.map(st => 
-            st.id === subtaskId ? { ...st, is_completed: !currentStatus } : st
-          );
-          updatedTask = { ...t, subtasks };
-          return updatedTask;
-        }
-        return t;
-      }));
-      if (updatedTask && activeSubtaskTask?.id === taskId) {
+      const updatedSubtasks = activeSubtaskTask.subtasks.map(st => 
+        st.id === subtaskId ? { ...st, is_completed: !currentStatus } : st
+      );
+      const updatedTask = { ...activeSubtaskTask, subtasks: updatedSubtasks };
+      
+      setTasks(prevTasks => prevTasks.map(t => t.id === taskId ? updatedTask : t));
+      if (activeSubtaskTask?.id === taskId) {
         setActiveSubtaskTask(updatedTask);
       }
     } catch (err) {
@@ -516,17 +503,11 @@ export default function Dashboard() {
                         <button className="delete-subtask-btn" onClick={async () => {
                           try {
                             await deleteSubtask(st.id);
-                            let updatedTask = null;
-                            setTasks(prevTasks => prevTasks.map(t => {
-                              if (t.id === activeSubtaskTask.id && t.subtasks) {
-                                updatedTask = { ...t, subtasks: t.subtasks.filter(s => s.id !== st.id) };
-                                return updatedTask;
-                              }
-                              return t;
-                            }));
-                            if (updatedTask && activeSubtaskTask?.id === updatedTask.id) {
-                              setActiveSubtaskTask(updatedTask);
-                            }
+                            const updatedSubtasks = activeSubtaskTask.subtasks.filter(s => s.id !== st.id);
+                            const updatedTask = { ...activeSubtaskTask, subtasks: updatedSubtasks };
+                            
+                            setTasks(prevTasks => prevTasks.map(t => t.id === activeSubtaskTask.id ? updatedTask : t));
+                            setActiveSubtaskTask(updatedTask);
                           } catch(err) {
                             alert("Failed to delete subtask");
                           }
