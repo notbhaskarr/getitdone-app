@@ -62,6 +62,21 @@ class Task(Base):
     events = relationship("TaskEvent", back_populates="task", cascade="all, delete-orphan", order_by="TaskEvent.created_at")
     user = relationship("User", back_populates="tasks", foreign_keys=[user_id])
     assignee = relationship("User", back_populates="assigned_tasks", foreign_keys=[assigned_to_id])
+    subtasks = relationship("Subtask", back_populates="task", cascade="all, delete-orphan", order_by="Subtask.created_at")
+
+# -------------------
+# SUBTASK MODEL
+# -------------------
+class Subtask(Base):
+    __tablename__ = "subtasks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    is_completed = Column(Boolean, default=False)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow)
+
+    task = relationship("Task", back_populates="subtasks")
 
 # -------------------
 # TASK EVENT MODEL

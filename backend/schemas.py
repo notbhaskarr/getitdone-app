@@ -50,6 +50,23 @@ class PeerConnectionRead(BaseModel):
 # -------------------
 # TASK SCHEMAS
 # -------------------
+class SubtaskCreate(BaseModel):
+    title: str
+
+class SubtaskUpdate(BaseModel):
+    title: Optional[str] = None
+    is_completed: Optional[bool] = None
+
+class SubtaskRead(BaseModel):
+    id: UUID
+    task_id: UUID
+    title: str
+    is_completed: bool
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None

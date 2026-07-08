@@ -108,3 +108,35 @@ export const getTaskEvents = async (taskId) => {
 
   return res.data;
 };
+
+// -------------------------
+// SUBTASKS
+// -------------------------
+export const createSubtask = async (taskId, title) => {
+  const token = localStorage.getItem("token");
+  const res = await axios.post(
+    `${BASE_URL}/tasks/${taskId}/subtasks`,
+    { title },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data;
+};
+
+export const updateSubtask = async (subtaskId, updates) => {
+  const token = localStorage.getItem("token");
+  const res = await axios.put(
+    `${BASE_URL}/subtasks/${subtaskId}`,
+    updates,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data;
+};
+
+export const deleteSubtask = async (subtaskId) => {
+  const token = localStorage.getItem("token");
+  const res = await axios.delete(
+    `${BASE_URL}/subtasks/${subtaskId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data;
+};

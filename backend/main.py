@@ -1,13 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, Header, WebSocket, WebSocketDisconnect, BackgroundTasks
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from uuid import UUID
 from datetime import datetime
 
 from database import engine, get_db
-from models import Base, User, Task, PeerConnection, TaskEvent
+from models import Base, User, Task, PeerConnection, TaskEvent, Subtask
 
-from schemas import UserCreate, UserLogin, TaskCreate, TaskUpdate, Token, PeerRequestCreate, TaskTipRequest
+from schemas import UserCreate, UserLogin, TaskCreate, TaskUpdate, Token, PeerRequestCreate, TaskTipRequest, SubtaskCreate, SubtaskUpdate
 from auth import hash_password, verify_password, create_access_token, decode_token
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -348,9 +348,17 @@ def get_tasks(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        return db.query(Task).filter(
+        tasks = db.query(Task).filter(
             or_(Task.user_id == current_user.id, Task.assigned_to_id == current_user.id)
         ).all()
+        
+        result = []
+        for t in tasks:
+            d = dict(t.__dict__)
+            d.pop("_sa_instance_state", None)
+            d["subtasks"] = [{"id": s.id, "title": s.title, "is_completed": s.is_completed} for s in t.subtasks]
+            result.append(d)
+        return result
     except Exception as e:
         import traceback
         return {"error_debug": str(e), "traceback": traceback.format_exc()}
@@ -609,3 +617,69 @@ def tip_task(
     db.commit()
     db.refresh(task)
     return task
+
+# =========================
+# SUBTASKS
+# =========================
+@app.post("/tasks/{task_id}/subtasks")
+def create_subtask(
+    task_id: UUID,
+    subtask: SubtaskCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.user_id != current_user.id and task.assigned_to_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    new_subtask = Subtask(
+        task_id=task_id,
+        title=subtask.title
+    )
+    db.add(new_subtask)
+    db.commit()
+    db.refresh(new_subtask)
+    return {"id": new_subtask.id, "title": new_subtask.title, "is_completed": new_subtask.is_completed}
+
+@app.put("/subtasks/{subtask_id}")
+def update_subtask(
+    subtask_id: UUID,
+    update: SubtaskUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    subtask = db.query(Subtask).filter(Subtask.id == subtask_id).first()
+    if not subtask:
+        raise HTTPException(status_code=404, detail="Subtask not found")
+    
+    task = db.query(Task).filter(Task.id == subtask.task_id).first()
+    if not task or (task.user_id != current_user.id and task.assigned_to_id != current_user.id):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if update.title is not None:
+        subtask.title = update.title
+    if update.is_completed is not None:
+        subtask.is_completed = update.is_completed
+        
+    db.commit()
+    return {"message": "Subtask updated"}
+
+@app.delete("/subtasks/{subtask_id}")
+def delete_subtask(
+    subtask_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    subtask = db.query(Subtask).filter(Subtask.id == subtask_id).first()
+    if not subtask:
+        raise HTTPException(status_code=404, detail="Subtask not found")
+        
+    task = db.query(Task).filter(Task.id == subtask.task_id).first()
+    if not task or (task.user_id != current_user.id and task.assigned_to_id != current_user.id):
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    db.delete(subtask)
+    db.commit()
+    return {"message": "Subtask deleted"}

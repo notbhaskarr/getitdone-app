@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { getTasks, createTask, updateTask, deleteTask, tipTask, getTaskEvents } from "../api/tasks";
+import { useEffect, useState, useRef } from "react";
+import { getTasks, createTask, updateTask, deleteTask, tipTask, getTaskEvents, createSubtask, updateSubtask, deleteSubtask } from "../api/tasks";
 import { getUserProfile } from "../api/users";
 import { getPeers, requestPeer, acceptPeer, removePeer } from "../api/peers";
 import { useNavigate } from "react-router-dom";
@@ -54,6 +54,23 @@ export default function Dashboard() {
   const [tippingTask, setTippingTask] = useState(null);
   const [tipAmount, setTipAmount] = useState("");
   const [onlinePeers, setOnlinePeers] = useState(new Set());
+  const [activeSubtaskTask, setActiveSubtaskTask] = useState(null);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const subtaskModalRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (subtaskModalRef.current && !subtaskModalRef.current.contains(event.target)) {
+        setActiveSubtaskTask(null);
+      }
+    };
+    if (activeSubtaskTask) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [activeSubtaskTask]);
 
   const navigate = useNavigate();
 
@@ -228,6 +245,55 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/");
+  };
+
+  const handleCreateSubtask = async (e) => {
+    e.preventDefault();
+    if (!newSubtaskTitle.trim() || !activeSubtaskTask) return;
+    
+    try {
+      const newSubtask = await createSubtask(activeSubtaskTask.id, newSubtaskTitle);
+      
+      let updatedTask = null;
+      setTasks(prevTasks => prevTasks.map(t => {
+        if (t.id === activeSubtaskTask.id) {
+          const subtasks = t.subtasks ? [...t.subtasks, newSubtask] : [newSubtask];
+          updatedTask = { ...t, subtasks };
+          return updatedTask;
+        }
+        return t;
+      }));
+      
+      if (updatedTask) {
+        setActiveSubtaskTask(updatedTask);
+      }
+      
+      setNewSubtaskTitle("");
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to create subtask");
+    }
+  };
+
+  const handleToggleSubtask = async (taskId, subtaskId, currentStatus) => {
+    try {
+      await updateSubtask(subtaskId, { is_completed: !currentStatus });
+      let updatedTask = null;
+      setTasks(prevTasks => prevTasks.map(t => {
+        if (t.id === taskId && t.subtasks) {
+          const subtasks = t.subtasks.map(st => 
+            st.id === subtaskId ? { ...st, is_completed: !currentStatus } : st
+          );
+          updatedTask = { ...t, subtasks };
+          return updatedTask;
+        }
+        return t;
+      }));
+      if (updatedTask && activeSubtaskTask?.id === taskId) {
+        setActiveSubtaskTask(updatedTask);
+      }
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to update subtask");
+    }
   };
 
   const openTipModal = (task) => {
@@ -406,7 +472,84 @@ export default function Dashboard() {
       </div>
 
       <div className="dashboard-layout">
-        <div className="dashboard-main">
+        <div className="dashboard-main" style={{ position: 'relative' }}>
+          {activeSubtaskTask && (() => {
+            const colors = [
+              "162, 178, 150",
+              "224, 122, 95",
+              "61, 90, 128",
+              "129, 178, 154",
+              "242, 204, 143",
+              "212, 163, 115",
+              "157, 129, 137"
+            ];
+            const taskIndex = tasks.findIndex(t => t.id === activeSubtaskTask.id);
+            const colorIndex = taskIndex !== -1 ? taskIndex : 0;
+            const taskColorRGB = colors[colorIndex % colors.length];
+
+            return (
+              <div className="subtask-modal-overlay">
+                <div ref={subtaskModalRef} className="subtask-modal" style={{ '--task-color': taskColorRGB }}>
+                  <div className="subtask-header">
+                    <h2>{activeSubtaskTask.title}</h2>
+                  </div>
+                  <div className="subtask-list">
+                    {(activeSubtaskTask.subtasks || []).map(st => (
+                      <div key={st.id} className="subtask-item">
+                        <label className="checkbox-container">
+                          <input 
+                            type="checkbox" 
+                            checked={st.is_completed} 
+                            onChange={() => handleToggleSubtask(activeSubtaskTask.id, st.id, st.is_completed)}
+                          />
+                          <span className="checkmark" style={{ borderColor: `rgb(${taskColorRGB})`, backgroundColor: st.is_completed ? `rgb(${taskColorRGB})` : 'transparent' }}>
+                            {st.is_completed && (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            )}
+                          </span>
+                        </label>
+                        <span className={`subtask-title ${st.is_completed ? 'completed' : ''}`}>
+                          {st.title}
+                        </span>
+                        <button className="delete-subtask-btn" onClick={async () => {
+                          try {
+                            await deleteSubtask(st.id);
+                            let updatedTask = null;
+                            setTasks(prevTasks => prevTasks.map(t => {
+                              if (t.id === activeSubtaskTask.id && t.subtasks) {
+                                updatedTask = { ...t, subtasks: t.subtasks.filter(s => s.id !== st.id) };
+                                return updatedTask;
+                              }
+                              return t;
+                            }));
+                            if (updatedTask && activeSubtaskTask?.id === updatedTask.id) {
+                              setActiveSubtaskTask(updatedTask);
+                            }
+                          } catch(err) {
+                            alert("Failed to delete subtask");
+                          }
+                        }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  <form onSubmit={handleCreateSubtask} className="subtask-input-container">
+                    <button type="button" onClick={handleCreateSubtask} className="subtask-add-btn">+</button>
+                    <input 
+                      type="text" 
+                      value={newSubtaskTitle}
+                      onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                      placeholder="Add a subtask..." 
+                      className="subtask-input"
+                      autoFocus
+                    />
+                  </form>
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="task-list">
             {(() => {
               let filteredTasks = selectedDate
@@ -483,6 +626,12 @@ export default function Dashboard() {
 
                     </div>
                     <div className="task-actions">
+                      <button className="icon-btn subtask-btn" onClick={() => setActiveSubtaskTask(task)} title="Subtasks">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', opacity: 0.7 }}>
+                          <path d="M9 11l3 3L22 4"></path>
+                          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                        </svg>
+                      </button>
                       <button className="icon-btn activity" onClick={() => toggleActivity(task.id)} title="Activity History">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', opacity: 0.7 }}>
                           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
@@ -817,6 +966,8 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+
 
       <div className="mac-toast-container">
         {notifications.map(notif => (
