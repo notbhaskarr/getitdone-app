@@ -485,7 +485,7 @@ export default function Dashboard() {
                       <div key={st.id} className="subtask-item">
                         <input 
                           type="checkbox" 
-                          className="task-checkbox"
+                          className="task-checkbox subtask-checkbox"
                           checked={st.is_completed} 
                           onChange={() => handleToggleSubtask(activeSubtaskTask.id, st.id, st.is_completed)}
                         />

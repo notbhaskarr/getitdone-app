@@ -242,6 +242,17 @@
   font-weight: bold;
 }
 
+.subtask-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  margin-top: 0;
+}
+
+.subtask-checkbox:checked::after {
+  font-size: 13px;
+}
+
 .task-content {
   flex-grow: 1;
 }
