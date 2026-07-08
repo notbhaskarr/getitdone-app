@@ -251,34 +251,93 @@ export default function Dashboard() {
     e.preventDefault();
     if (!newSubtaskTitle.trim() || !activeSubtaskTask) return;
     
+    const tempId = 'temp-' + Date.now();
+    const tempSubtask = { id: tempId, title: newSubtaskTitle, is_completed: false, task_id: activeSubtaskTask.id };
+    const titleToCreate = newSubtaskTitle;
+    setNewSubtaskTitle("");
+    
+    // Optimistic Update
+    setTasks(prevTasks => {
+      const newTasks = prevTasks.map(t => {
+        if (t.id === activeSubtaskTask.id) {
+          const subtasks = t.subtasks ? [...t.subtasks, tempSubtask] : [tempSubtask];
+          const updated = { ...t, subtasks };
+          if (activeSubtaskTask?.id === t.id) setActiveSubtaskTask(updated);
+          return updated;
+        }
+        return t;
+      });
+      return newTasks;
+    });
+    
     try {
-      const newSubtask = await createSubtask(activeSubtaskTask.id, newSubtaskTitle);
+      const newSubtask = await createSubtask(activeSubtaskTask.id, titleToCreate);
       
-      const updatedSubtasks = activeSubtaskTask.subtasks ? [...activeSubtaskTask.subtasks, newSubtask] : [newSubtask];
-      const updatedTask = { ...activeSubtaskTask, subtasks: updatedSubtasks };
-      
-      setTasks(prevTasks => prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t));
-      setActiveSubtaskTask(updatedTask);
-      
-      setNewSubtaskTitle("");
+      // Replace temp subtask with real one
+      setTasks(prevTasks => {
+        const newTasks = prevTasks.map(t => {
+          if (t.id === activeSubtaskTask.id && t.subtasks) {
+            const subtasks = t.subtasks.map(st => st.id === tempId ? newSubtask : st);
+            const replaced = { ...t, subtasks };
+            if (activeSubtaskTask?.id === t.id) setActiveSubtaskTask(replaced);
+            return replaced;
+          }
+          return t;
+        });
+        return newTasks;
+      });
     } catch (err) {
+      // Revert optimistic update
+      setTasks(prevTasks => {
+        const newTasks = prevTasks.map(t => {
+          if (t.id === activeSubtaskTask.id && t.subtasks) {
+            const subtasks = t.subtasks.filter(st => st.id !== tempId);
+            const reverted = { ...t, subtasks };
+            if (activeSubtaskTask?.id === t.id) setActiveSubtaskTask(reverted);
+            return reverted;
+          }
+          return t;
+        });
+        return newTasks;
+      });
       alert(err.response?.data?.detail || "Failed to create subtask");
     }
   };
 
   const handleToggleSubtask = async (taskId, subtaskId, currentStatus) => {
+    // Prevent toggling temp subtasks while they are saving
+    if (subtaskId.toString().startsWith('temp-')) return;
+
+    // Optimistic Update
+    setTasks(prevTasks => {
+      const newTasks = prevTasks.map(t => {
+        if (t.id === taskId && t.subtasks) {
+          const subtasks = t.subtasks.map(st => st.id === subtaskId ? { ...st, is_completed: !currentStatus } : st);
+          const updated = { ...t, subtasks };
+          if (activeSubtaskTask?.id === taskId) setActiveSubtaskTask(updated);
+          return updated;
+        }
+        return t;
+      });
+      return newTasks;
+    });
+
     try {
       await updateSubtask(subtaskId, { is_completed: !currentStatus });
-      const updatedSubtasks = activeSubtaskTask.subtasks.map(st => 
-        st.id === subtaskId ? { ...st, is_completed: !currentStatus } : st
-      );
-      const updatedTask = { ...activeSubtaskTask, subtasks: updatedSubtasks };
-      
-      setTasks(prevTasks => prevTasks.map(t => t.id === taskId ? updatedTask : t));
-      if (activeSubtaskTask?.id === taskId) {
-        setActiveSubtaskTask(updatedTask);
-      }
     } catch (err) {
+      // Revert on failure
+      setTasks(prevTasks => {
+        const newTasks = prevTasks.map(t => {
+          if (t.id === taskId && t.subtasks) {
+            const subtasks = t.subtasks.map(st => st.id === subtaskId ? { ...st, is_completed: currentStatus } : st);
+            const reverted = { ...t, subtasks };
+            if (activeSubtaskTask?.id === taskId) setActiveSubtaskTask(reverted);
+            return reverted;
+          }
+          return t;
+        });
+        return newTasks;
+      });
       alert(err.response?.data?.detail || "Failed to update subtask");
     }
   };
@@ -493,14 +552,44 @@ export default function Dashboard() {
                           {st.title}
                         </span>
                         <button className="delete-subtask-btn" onClick={async () => {
+                          // Prevent deleting temp subtasks
+                          if (st.id.toString().startsWith('temp-')) return;
+
+                          // Save state for revert
+                          const taskId = activeSubtaskTask.id;
+                          let originalTaskState = null;
+
+                          // Optimistic Delete
+                          setTasks(prevTasks => {
+                            const newTasks = prevTasks.map(t => {
+                              if (t.id === taskId && t.subtasks) {
+                                originalTaskState = { ...t };
+                                const subtasks = t.subtasks.filter(s => s.id !== st.id);
+                                const updated = { ...t, subtasks };
+                                if (activeSubtaskTask?.id === taskId) setActiveSubtaskTask(updated);
+                                return updated;
+                              }
+                              return t;
+                            });
+                            return newTasks;
+                          });
+
                           try {
                             await deleteSubtask(st.id);
-                            const updatedSubtasks = activeSubtaskTask.subtasks.filter(s => s.id !== st.id);
-                            const updatedTask = { ...activeSubtaskTask, subtasks: updatedSubtasks };
-                            
-                            setTasks(prevTasks => prevTasks.map(t => t.id === activeSubtaskTask.id ? updatedTask : t));
-                            setActiveSubtaskTask(updatedTask);
                           } catch(err) {
+                            // Revert on failure
+                            if (originalTaskState) {
+                              setTasks(prevTasks => {
+                                const newTasks = prevTasks.map(t => {
+                                  if (t.id === taskId) {
+                                    if (activeSubtaskTask?.id === taskId) setActiveSubtaskTask(originalTaskState);
+                                    return originalTaskState;
+                                  }
+                                  return t;
+                                });
+                                return newTasks;
+                              });
+                            }
                             alert("Failed to delete subtask");
                           }
                         }}>✕</button>
