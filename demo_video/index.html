@@ -396,12 +396,12 @@
     <div class="slide" data-duration="7000">
       <div class="slide-image-container">
         <img id="slide11-img1" class="slide-image slow-zoom" src="../demo_screenshots/20_appreciate_modal_50.png" alt="50 Whuffies">
-        <img id="slide11-img2" class="slide-image" src="../demo_screenshots/21_ammara_score_increase.png" alt="Ammara Score" style="opacity: 0; transition: opacity 1.5s, transform 3s; transform-origin: top right; transform: scale(1);">
+        <img id="slide11-img2" class="slide-image" src="../demo_screenshots/21_ammara_score_increase.png" alt="Ammara Score" style="opacity: 0; transition: opacity 1.5s;">
       </div>
       <!-- Live +50 Animation Overlay -->
-      <div id="whuffie-live-overlay" style="position: absolute; top: 24px; right: 80px; opacity: 0; pointer-events: none; display: flex; flex-direction: column; align-items: flex-end;">
-        <div id="whuffie-live-counter" style="font-size: 16px; font-weight: 600; color: #1a1a1a;">66</div>
-        <div id="whuffie-live-plus" style="font-size: 20px; font-weight: 700; color: #10b981; transform: translateY(10px); transition: transform 1.5s ease-out, opacity 1s; opacity: 0;">+50</div>
+      <div id="whuffie-live-overlay" style="position: absolute; top: 38px; right: 280px; opacity: 0; pointer-events: none; display: flex; flex-direction: column; align-items: flex-end; background: #ffffff; padding: 2px 4px; border-radius: 4px;">
+        <div id="whuffie-live-counter" style="font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; font-family: 'Inter', sans-serif;">✦ 66 WHUFFIES</div>
+        <div id="whuffie-live-plus" style="font-size: 16px; font-weight: 700; color: var(--accent); transform: translateY(10px); transition: transform 1.5s ease-out, opacity 1s; opacity: 0; margin-top: 4px;">+50</div>
       </div>
       <div class="slide-overlay" id="slide11-overlay" style="transition: opacity 0.5s;">
         <div class="slide-text-wrapper">
@@ -488,7 +488,7 @@
           const interval = setInterval(() => {
             count += 2; // Increment by 2 to make it smoother and take roughly the same amount of frames
             if (count > 116) count = 116;
-            counterEl.textContent = count;
+            counterEl.textContent = `✦ ${count} WHUFFIES`;
             if (count >= 116) {
               clearInterval(interval);
               setTimeout(() => {
@@ -518,7 +518,7 @@
           plus.style.opacity = '0';
           plus.style.transform = 'translateY(10px)';
         }
-        if (counterEl) counterEl.textContent = '66';
+        if (counterEl) counterEl.textContent = '✦ 66 WHUFFIES';
       }
 
       counter.textContent = `${currentSlide + 1} / ${slides.length}`;
