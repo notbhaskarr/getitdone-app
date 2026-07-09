@@ -393,11 +393,17 @@
     </div>
 
     <!-- SLIDE 11: Appreciate Modal 50 Whuffies -->
-    <div class="slide" data-duration="6000">
+    <div class="slide" data-duration="7000">
       <div class="slide-image-container">
-        <img class="slide-image slow-zoom" src="../demo_screenshots/20_appreciate_modal_50.png" alt="50 Whuffies">
+        <img id="slide11-img1" class="slide-image slow-zoom" src="../demo_screenshots/20_appreciate_modal_50.png" alt="50 Whuffies">
+        <img id="slide11-img2" class="slide-image" src="../demo_screenshots/21_ammara_score_increase.png" alt="Ammara Score" style="opacity: 0; transition: opacity 1.5s, transform 3s; transform-origin: top right; transform: scale(1);">
       </div>
-      <div class="slide-overlay">
+      <!-- Live +50 Animation Overlay -->
+      <div id="whuffie-live-overlay" style="position: absolute; top: 24px; right: 80px; opacity: 0; pointer-events: none; display: flex; flex-direction: column; align-items: flex-end;">
+        <div id="whuffie-live-counter" style="font-size: 16px; font-weight: 600; color: #1a1a1a;">150</div>
+        <div id="whuffie-live-plus" style="font-size: 20px; font-weight: 700; color: #10b981; transform: translateY(10px); transition: transform 1.5s ease-out, opacity 1s; opacity: 0;">+50</div>
+      </div>
+      <div class="slide-overlay" id="slide11-overlay" style="transition: opacity 0.5s;">
         <div class="slide-text-wrapper">
           <div class="slide-headline">A Social Economy.</div>
           <div class="slide-subtext">When a peer helps you succeed, reward them. The Dove flies to transfer your whuffies into their social score.</div>
@@ -441,6 +447,8 @@
       return parseInt(slides[index].dataset.duration) || 4000;
     }
 
+    let slide11Timer = null;
+
     function goToSlide(index) {
       slides[currentSlide].classList.remove('active');
       // Reset image animations
@@ -451,6 +459,8 @@
         img.style.animation = '';
       });
 
+      clearTimeout(slide11Timer);
+
       currentSlide = index;
       slides[currentSlide].classList.add('active');
 
@@ -460,6 +470,55 @@
       newImgs.forEach(img => {
         img.style.setProperty('--slide-duration', duration + 'ms');
       });
+
+      if (currentSlide === 10) {
+        // Slide 11 logic
+        slide11Timer = setTimeout(() => {
+          document.getElementById('slide11-img1').style.opacity = '0';
+          document.getElementById('slide11-img2').style.opacity = '1';
+          document.getElementById('slide11-img2').style.transform = 'scale(1.5)';
+          document.getElementById('slide11-overlay').style.opacity = '0';
+          
+          document.getElementById('whuffie-live-overlay').style.opacity = '1';
+          document.getElementById('whuffie-live-plus').style.opacity = '1';
+          document.getElementById('whuffie-live-plus').style.transform = 'translateY(-20px)';
+          
+          let count = 150;
+          const counterEl = document.getElementById('whuffie-live-counter');
+          const interval = setInterval(() => {
+            count += 5;
+            counterEl.textContent = count;
+            if (count >= 200) {
+              clearInterval(interval);
+              setTimeout(() => {
+                const plus = document.getElementById('whuffie-live-plus');
+                if (plus) plus.style.opacity = '0';
+              }, 1000);
+            }
+          }, 50);
+        }, 3000);
+      } else {
+        // Reset Slide 11
+        const s11Img1 = document.getElementById('slide11-img1');
+        const s11Img2 = document.getElementById('slide11-img2');
+        const overlay = document.getElementById('slide11-overlay');
+        const liveOverlay = document.getElementById('whuffie-live-overlay');
+        const plus = document.getElementById('whuffie-live-plus');
+        const counterEl = document.getElementById('whuffie-live-counter');
+        
+        if (s11Img1) s11Img1.style.opacity = '1';
+        if (s11Img2) {
+          s11Img2.style.opacity = '0';
+          s11Img2.style.transform = 'scale(1)';
+        }
+        if (overlay) overlay.style.opacity = '1';
+        if (liveOverlay) liveOverlay.style.opacity = '0';
+        if (plus) {
+          plus.style.opacity = '0';
+          plus.style.transform = 'translateY(10px)';
+        }
+        if (counterEl) counterEl.textContent = '150';
+      }
 
       counter.textContent = `${currentSlide + 1} / ${slides.length}`;
       startProgress();
