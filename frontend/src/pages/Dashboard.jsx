@@ -61,6 +61,7 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState([]);
   const [tippingTask, setTippingTask] = useState(null);
   const [tipAmount, setTipAmount] = useState("");
+  const [isTippingFlying, setIsTippingFlying] = useState(false);
   const [onlinePeers, setOnlinePeers] = useState(new Set());
   const [activeSubtaskTask, setActiveSubtaskTask] = useState(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
@@ -369,7 +370,7 @@ export default function Dashboard() {
 
   const submitTip = async (e) => {
     e.preventDefault();
-    if (!tippingTask) return;
+    if (!tippingTask || isTippingFlying) return;
 
     const amount = parseInt(tipAmount, 10);
     if (isNaN(amount) || amount <= 0) {
@@ -377,31 +378,35 @@ export default function Dashboard() {
       return;
     }
 
-    setLoadingTasks(prev => new Set(prev).add(tippingTask.id));
-    const taskObj = tippingTask;
-    setTippingTask(null);
+    setIsTippingFlying(true);
+    setTimeout(async () => {
+      setLoadingTasks(prev => new Set(prev).add(tippingTask.id));
+      const taskObj = tippingTask;
+      setTippingTask(null);
+      setIsTippingFlying(false);
 
-    try {
-      const updated = await tipTask(taskObj.id, amount);
-      setTasks(tasks => tasks.map(t => t.id === taskObj.id ? updated : t));
+      try {
+        const updated = await tipTask(taskObj.id, amount);
+        setTasks(tasks => tasks.map(t => t.id === taskObj.id ? updated : t));
 
-      const u = await getUserProfile();
-      setLuffies(u.luffies || 0);
+        const u = await getUserProfile();
+        setLuffies(u.luffies || 0);
 
-      // refresh events if open
-      if (expandedActivity === taskObj.id) {
-        const evts = await getTaskEvents(taskObj.id);
-        setTaskActivities(prev => ({ ...prev, [taskObj.id]: evts }));
+        // refresh events if open
+        if (maximizedTask?.id === taskObj.id) {
+          const evts = await getTaskEvents(taskObj.id);
+          setTaskActivities(prev => ({ ...prev, [taskObj.id]: evts }));
+        }
+      } catch (error) {
+        alert(error.response?.data?.detail || "Failed to tip");
+      } finally {
+        setLoadingTasks(prev => {
+          const next = new Set(prev);
+          next.delete(taskObj.id);
+          return next;
+        });
       }
-    } catch (error) {
-      alert(error.response?.data?.detail || "Failed to tip");
-    } finally {
-      setLoadingTasks(prev => {
-        const next = new Set(prev);
-        next.delete(taskObj.id);
-        return next;
-      });
-    }
+    }, 400);
   };
 
 
@@ -1001,29 +1006,26 @@ export default function Dashboard() {
       )}
 
       {tippingTask && (
-        <div className="mac-modal-overlay">
-          <div className="mac-modal" style={{ '--task-color': '253, 246, 227', width: '320px', height: 'auto' }}>
-            <div className="mac-header" style={{ justifyContent: 'space-between' }}>
-              <h2 className="mac-title" style={{ fontSize: '16px', margin: 0 }}>Tip Whuffies</h2>
-              <div className="mac-controls">
+        <div className="subtask-modal-overlay">
+          <div className="subtask-modal" style={{ '--task-color': '129, 178, 154', width: '320px', height: 'auto', padding: 0, overflow: 'hidden' }}>
+            <div className="mac-header" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="mac-title" style={{ fontSize: '16px', margin: 0, lineHeight: 1 }}>Appreciate {peers.find(p => p.peer_id === tippingTask.assigned_to_id)?.peer_name || 'Peer'}</h2>
+              <div className="mac-controls" style={{ display: 'flex', alignItems: 'center' }}>
                 <button className="mac-btn red" onClick={() => setTippingTask(null)} title="Close"></button>
               </div>
             </div>
-            <div className="mac-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px' }}>
-              <p style={{ margin: 0, fontSize: '14px', opacity: 0.8 }}>
-                How many whuffies would you like to tip <strong>{peers.find(p => p.peer_id === tippingTask.assigned_to_id)?.peer_name || 'them'}</strong> for this task?
-              </p>
-              <form onSubmit={submitTip} style={{ display: 'flex', gap: '8px' }}>
+            <div className="mac-content" style={{ display: 'flex', flexDirection: 'column', padding: '16px', background: 'transparent' }}>
+              <form onSubmit={submitTip} style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
                 <input
                   type="number"
                   min="1"
                   value={tipAmount}
                   onChange={(e) => setTipAmount(e.target.value)}
-                  placeholder="Amount"
+                  placeholder="Enter whuffies"
                   autoFocus
-                  style={{ flexGrow: 1, padding: '8px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)' }}
+                  style={{ flexGrow: 1, padding: '10px 12px', background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.1)', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', borderRadius: '6px', color: 'var(--text)', boxSizing: 'border-box' }}
                 />
-                <button type="submit" className="icon-btn edit" style={{ padding: '0 16px', fontSize: '14px', color: '#af9f5d' }}>Tip</button>
+                <button type="submit" className={`icon-btn edit ${isTippingFlying ? 'fly-away' : ''}`} style={{ width: 'auto', padding: '0 8px', fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', background: 'transparent' }} title="Send Whuffies">🕊️</button>
               </form>
             </div>
           </div>

@@ -905,3 +905,31 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: none;
   -webkit-appearance: none;
 }
+/* Hide number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+@keyframes flyAway {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(-2px, 2px) scale(0.9) rotate(-10deg);
+  }
+  100% {
+    transform: translate(40px, -40px) scale(1.5) rotate(25deg);
+    opacity: 0;
+  }
+}
+
+.fly-away {
+  animation: flyAway 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+  pointer-events: none;
+}
