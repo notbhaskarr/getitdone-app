@@ -430,7 +430,7 @@ export default function Dashboard() {
     try {
       await acceptPeer(connId);
       const peersData = await getPeers();
-      setPeers(peersData.peers || []);
+      setPeers(peersData || []);
     } catch (err) {
       alert("Failed to accept request");
     }
@@ -441,7 +441,7 @@ export default function Dashboard() {
     try {
       await removePeer(connId);
       const peersData = await getPeers();
-      setPeers(peersData.peers || []);
+      setPeers(peersData || []);
     } catch (err) {
       alert(err.response?.data?.detail || "Failed to remove peer");
     }
