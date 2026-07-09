@@ -400,7 +400,7 @@
       </div>
       <!-- Live +50 Animation Overlay -->
       <div id="whuffie-live-overlay" style="position: absolute; top: 24px; right: 80px; opacity: 0; pointer-events: none; display: flex; flex-direction: column; align-items: flex-end;">
-        <div id="whuffie-live-counter" style="font-size: 16px; font-weight: 600; color: #1a1a1a;">150</div>
+        <div id="whuffie-live-counter" style="font-size: 16px; font-weight: 600; color: #1a1a1a;">66</div>
         <div id="whuffie-live-plus" style="font-size: 20px; font-weight: 700; color: #10b981; transform: translateY(10px); transition: transform 1.5s ease-out, opacity 1s; opacity: 0;">+50</div>
       </div>
       <div class="slide-overlay" id="slide11-overlay" style="transition: opacity 0.5s;">
@@ -483,12 +483,13 @@
           document.getElementById('whuffie-live-plus').style.opacity = '1';
           document.getElementById('whuffie-live-plus').style.transform = 'translateY(-20px)';
           
-          let count = 150;
+          let count = 66;
           const counterEl = document.getElementById('whuffie-live-counter');
           const interval = setInterval(() => {
-            count += 5;
+            count += 2; // Increment by 2 to make it smoother and take roughly the same amount of frames
+            if (count > 116) count = 116;
             counterEl.textContent = count;
-            if (count >= 200) {
+            if (count >= 116) {
               clearInterval(interval);
               setTimeout(() => {
                 const plus = document.getElementById('whuffie-live-plus');
@@ -517,7 +518,7 @@
           plus.style.opacity = '0';
           plus.style.transform = 'translateY(10px)';
         }
-        if (counterEl) counterEl.textContent = '150';
+        if (counterEl) counterEl.textContent = '66';
       }
 
       counter.textContent = `${currentSlide + 1} / ${slides.length}`;
