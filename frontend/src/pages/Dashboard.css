@@ -732,21 +732,22 @@
 
 .mac-title-input {
   font-family: var(--heading);
-  font-size: 32px;
-  font-weight: 500;
+  font-size: 36px;
+  font-weight: 600;
   color: var(--text-h);
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px dashed var(--border);
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 0px;
   width: 100%;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.mac-title-input:focus {
-  border-color: var(--text-h);
+.mac-title-input::placeholder {
+  color: var(--text-h);
+  opacity: 0.3;
 }
 
 .mac-desc-input {
@@ -754,19 +755,42 @@
   font-size: 16px;
   color: var(--text);
   line-height: 1.6;
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px dashed var(--border);
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 8px;
-  padding: 12px;
+  padding: 12px 0px;
   width: 100%;
   outline: none;
   box-sizing: border-box;
   resize: vertical;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.mac-desc-input:focus {
-  border-color: var(--text-h);
+.mac-desc-input::placeholder {
+  color: var(--text);
+  opacity: 0.4;
+}
+
+.mac-pill-select, .mac-pill-date {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.mac-pill-select:hover, .mac-pill-date:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .task-activity-panel {

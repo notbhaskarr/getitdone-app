@@ -756,7 +756,7 @@ export default function Dashboard() {
               <div className="mac-header" style={{ justifyContent: 'space-between' }}>
                 <div className="mac-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   {isMacEditing ? (
-                    <button className="icon-btn edit" style={{ width: 'auto', padding: '0 12px', fontSize: '14px', fontWeight: 500 }} onClick={handleMacSave} title="Save">Save</button>
+                    <button className="mac-pill-select" style={{ background: 'var(--accent)', color: 'var(--bg)', border: 'none', fontWeight: 600, padding: '6px 16px', height: '32px', display: 'flex', alignItems: 'center' }} onClick={handleMacSave} title="Save">Save</button>
                   ) : (
                     <>
                       <button className="icon-btn edit" onClick={() => setIsMacEditing(true)} title="Edit">✎</button>
@@ -787,38 +787,36 @@ export default function Dashboard() {
                         className="mac-title-input"
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
-                        placeholder="Task Title"
+                        placeholder="What needs to be done?"
                       />
                       <textarea
                         className="mac-desc-input"
                         value={editDesc}
                         onChange={(e) => setEditDesc(e.target.value)}
-                        placeholder="Description (optional)"
+                        placeholder="Add details, links, or notes..."
                         rows={5}
                       />
                       {maximizedTask.user_id === currentUserId && (
                         <select
-                          className="mac-desc-input"
-                          style={{ marginTop: '16px', background: 'transparent', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', cursor: 'pointer', paddingBottom: '8px' }}
+                          className="mac-pill-select"
+                          style={{ marginTop: '24px', width: '250px', display: 'block' }}
                           value={editAssigneeId}
                           onChange={(e) => setEditAssigneeId(e.target.value)}
                         >
-                          <option value="">Assign the task</option>
+                          <option value="">Unassigned</option>
                           {peers.filter(p => p.status === 'accepted').map(p => (
-                            <option key={p.peer_id} value={p.peer_id}>Assigned to : {p.peer_name}</option>
+                            <option key={p.peer_id} value={p.peer_id}>Assign to: {p.peer_name}</option>
                           ))}
                         </select>
                       )}
-                      <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '14px' }}>
-                        <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', opacity: 0.8, whiteSpace: 'nowrap', flexShrink: 0 }}>Due Date:</label>
-                        <input
-                          type="date"
-                          style={{ background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', padding: '4px 0', cursor: 'pointer', color: 'var(--text)', outline: 'none', flexGrow: 1 }}
-                          value={editDueDate}
-                          onChange={(e) => setEditDueDate(e.target.value)}
-                          onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
-                        />
-                      </div>
+                      <input
+                        type="date"
+                        className="mac-pill-date"
+                        style={{ marginTop: '12px', width: '250px', display: 'block' }}
+                        value={editDueDate}
+                        onChange={(e) => setEditDueDate(e.target.value)}
+                        onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
+                      />
                     </>
                   ) : (
                     <>
@@ -898,7 +896,7 @@ export default function Dashboard() {
           <div className="mac-modal fullscreen" style={{ '--task-color': '162, 178, 150' }}>
             <div className="mac-header" style={{ justifyContent: 'space-between' }}>
               <div className="mac-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <button className="icon-btn edit" style={{ width: 'auto', padding: '0 12px', fontSize: '14px', fontWeight: 500 }} onClick={handleCreate} title="Save">Save</button>
+                <button className="mac-pill-select" style={{ background: 'var(--accent)', color: 'var(--bg)', border: 'none', fontWeight: 600, padding: '6px 16px', height: '32px', display: 'flex', alignItems: 'center' }} onClick={handleCreate} title="Save">Save</button>
               </div>
               <div className="mac-controls">
                 <button className="mac-btn red" onClick={() => setIsCreatingTask(false)} title="Close"></button>
@@ -910,37 +908,35 @@ export default function Dashboard() {
                   className="mac-title-input"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="What's going on?"
+                  placeholder="What needs to be done?"
                   autoFocus
                 />
                 <textarea
                   className="mac-desc-input"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Description and Details"
+                  placeholder="Add details, links, or notes..."
                   rows={5}
                 />
                 <select
-                  className="mac-desc-input"
-                  style={{ marginTop: '16px', background: 'transparent', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', cursor: 'pointer', paddingBottom: '8px' }}
+                  className="mac-pill-select"
+                  style={{ marginTop: '24px', width: '250px', display: 'block' }}
                   value={assigneeId}
                   onChange={(e) => setAssigneeId(e.target.value)}
                 >
-                  <option value="">Assign the task</option>
+                  <option value="">Unassigned</option>
                   {peers.filter(p => p.status === 'accepted').map(p => (
-                    <option key={p.peer_id} value={p.peer_id}>Assigned to : {p.peer_name}</option>
+                    <option key={p.peer_id} value={p.peer_id}>Assign to: {p.peer_name}</option>
                   ))}
                 </select>
-                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '12px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', opacity: 0.8, whiteSpace: 'nowrap', flexShrink: 0 }}>Due Date:</label>
-                  <input
-                    type="date"
-                    style={{ background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', fontSize: '14px', fontWeight: 500, fontFamily: 'initial', padding: '4px 0', cursor: 'pointer', color: 'var(--text)', outline: 'none', flexGrow: 1 }}
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
-                  />
-                </div>
+                <input
+                  type="date"
+                  className="mac-pill-date"
+                  style={{ marginTop: '12px', width: '250px', display: 'block' }}
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
+                />
               </div>
             </div>
           </div>
