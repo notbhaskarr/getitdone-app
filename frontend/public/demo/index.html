@@ -577,6 +577,16 @@
 
     // Start the show
     goToSlide(0);
+
+    // ===== RENDER ANTI-SLEEP PING =====
+    // Render free tier goes to sleep after 15 mins. This keeps it awake while the demo runs.
+    function wakeUpBackend() {
+      fetch('https://getitdone-app.onrender.com/')
+        .then(res => console.log('Backend Pinged: ', res.status))
+        .catch(err => console.log('Backend Ping Error: ', err));
+    }
+    wakeUpBackend(); // Ping immediately on load
+    setInterval(wakeUpBackend, 10 * 60 * 1000); // Ping every 10 minutes
   </script>
 </body>
 </html>
