@@ -396,12 +396,11 @@
     <div class="slide" data-duration="7000">
       <div class="slide-image-container">
         <img id="slide11-img1" class="slide-image slow-zoom" src="../demo_screenshots/20_appreciate_modal_50.png" alt="50 Whuffies">
-        <img id="slide11-img2" class="slide-image" src="../demo_screenshots/21_ammara_score_increase.png" alt="Ammara Score" style="opacity: 0; transition: opacity 1.5s;">
+        <img id="slide11-img2" class="slide-image" src="../demo_screenshots/21_ammara_score_increase.png" alt="Ammara Score" style="opacity: 0; transition: opacity 1.5s, transform 3s; transform-origin: top right; transform: scale(1);">
       </div>
       <!-- Live +50 Animation Overlay -->
-      <div id="whuffie-live-overlay" style="position: absolute; top: 38px; right: 280px; opacity: 0; pointer-events: none; display: flex; flex-direction: column; align-items: flex-end; background: #ffffff; padding: 2px 4px; border-radius: 4px;">
-        <div id="whuffie-live-counter" style="font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; font-family: 'Inter', sans-serif;">✦ 66 WHUFFIES</div>
-        <div id="whuffie-live-plus" style="font-size: 16px; font-weight: 700; color: var(--accent); transform: translateY(10px); transition: transform 1.5s ease-out, opacity 1s; opacity: 0; margin-top: 4px;">+50</div>
+      <div id="whuffie-live-overlay" style="position: absolute; top: 15%; right: 15%; opacity: 0; pointer-events: none; display: flex; flex-direction: column; align-items: flex-end;">
+        <div id="whuffie-live-plus" style="font-size: 32px; font-weight: 700; color: var(--accent); transform: translateY(20px); transition: transform 2s ease-out, opacity 1s; opacity: 0; text-shadow: 0 4px 12px rgba(0,0,0,0.1);">+50 WHUFFIES</div>
       </div>
       <div class="slide-overlay" id="slide11-overlay" style="transition: opacity 0.5s;">
         <div class="slide-text-wrapper">
@@ -479,46 +478,37 @@
           document.getElementById('slide11-img2').style.transform = 'scale(1.5)';
           document.getElementById('slide11-overlay').style.opacity = '0';
           
-          document.getElementById('whuffie-live-overlay').style.opacity = '1';
-          document.getElementById('whuffie-live-plus').style.opacity = '1';
-          document.getElementById('whuffie-live-plus').style.transform = 'translateY(-20px)';
-          
-          let count = 66;
-          const counterEl = document.getElementById('whuffie-live-counter');
-          const interval = setInterval(() => {
-            count += 2; // Increment by 2 to make it smoother and take roughly the same amount of frames
-            if (count > 116) count = 116;
-            counterEl.textContent = `✦ ${count} WHUFFIES`;
-            if (count >= 116) {
-              clearInterval(interval);
+          setTimeout(() => {
+            document.getElementById('whuffie-live-overlay').style.opacity = '1';
+            const plus = document.getElementById('whuffie-live-plus');
+            if (plus) {
+              plus.style.opacity = '1';
+              plus.style.transform = 'translateY(-30px)';
               setTimeout(() => {
-                const plus = document.getElementById('whuffie-live-plus');
-                if (plus) plus.style.opacity = '0';
-              }, 1000);
+                plus.style.opacity = '0';
+              }, 2000);
             }
-          }, 50);
+          }, 2500);
         }, 3000);
       } else {
         // Reset Slide 11
         const s11Img1 = document.getElementById('slide11-img1');
         const s11Img2 = document.getElementById('slide11-img2');
         const overlay = document.getElementById('slide11-overlay');
-        const liveOverlay = document.getElementById('whuffie-live-overlay');
         const plus = document.getElementById('whuffie-live-plus');
-        const counterEl = document.getElementById('whuffie-live-counter');
         
         if (s11Img1) s11Img1.style.opacity = '1';
         if (s11Img2) {
           s11Img2.style.opacity = '0';
           s11Img2.style.transform = 'scale(1)';
         }
+        const liveOverlay = document.getElementById('whuffie-live-overlay');
         if (overlay) overlay.style.opacity = '1';
         if (liveOverlay) liveOverlay.style.opacity = '0';
         if (plus) {
           plus.style.opacity = '0';
           plus.style.transform = 'translateY(10px)';
         }
-        if (counterEl) counterEl.textContent = '✦ 66 WHUFFIES';
       }
 
       counter.textContent = `${currentSlide + 1} / ${slides.length}`;
