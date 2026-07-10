@@ -83,6 +83,21 @@ export default function TaskDetailsModal({
               <>
                 <h1 className="mac-title">{maximizedTask.title}</h1>
                 
+                <div style={{ display: 'flex', gap: '16px', fontSize: '13px', fontWeight: 500, color: 'var(--text-h)', opacity: 0.9, marginTop: '8px', marginBottom: '16px' }}>
+                  {maximizedTask.assigned_to_id && (
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>👤</span>
+                        <span>{peers.find(p => p.peer_id === maximizedTask.assigned_to_id)?.peer_name || 'Assigned'}</span>
+                     </div>
+                  )}
+                  {maximizedTask.due_date && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>Due:</span>
+                      <span>{new Date(maximizedTask.due_date.substring(0, 10)).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}</span>
+                    </div>
+                  )}
+                </div>
+                
 
                 {maximizedTask.description ? (
                   <div className="mac-desc">
@@ -98,7 +113,7 @@ export default function TaskDetailsModal({
           <div className="mac-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: '32px', fontSize: '13px', fontFamily: 'var(--sans)', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
             
             <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-              {isMacEditing ? (
+              {isMacEditing && (
                 <>
                   {maximizedTask.user_id === currentUserId && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.7, transition: 'opacity 0.2s', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}>
@@ -126,27 +141,14 @@ export default function TaskDetailsModal({
                     />
                   </div>
                 </>
-              ) : (
-                <>
-                  {maximizedTask.assigned_to_id && (
-                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.7 }}>
-                        <span>👤</span>
-                        <span>{peers.find(p => p.peer_id === maximizedTask.assigned_to_id)?.peer_name || 'Assigned'}</span>
-                     </div>
-                  )}
-                  {maximizedTask.due_date && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.7 }}>
-                      <span>Due:</span>
-                      <span>{new Date(maximizedTask.due_date.substring(0, 10)).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}</span>
-                    </div>
-                  )}
-                </>
               )}
             </div>
 
-            <div style={{ opacity: 0.5, textAlign: 'right' }}>
-              Created on: {maximizedTask.created_at ? new Date(maximizedTask.created_at + 'Z').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown'}
-            </div>
+            {isMacEditing && (
+              <div style={{ opacity: 0.5, textAlign: 'right', width: '100%' }}>
+                Created on: {maximizedTask.created_at ? new Date(maximizedTask.created_at + 'Z').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown'}
+              </div>
+            )}
           </div>
 
           {!isMacEditing && (
