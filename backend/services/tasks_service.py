@@ -199,7 +199,7 @@ def update_task(
             elif task.assigned_to_id is not None and new_assignee_id is None:
                 db_current_user = db.query(User).with_for_update().filter(User.id == current_user.id).first()
                 db_current_user.luffies += task.reward_luffies
-                db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="ASSIGNED", details="Assignment revoked"))
+                db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="ASSIGNED", details=f"Assignment revoked from {task.assigned_to_id}"))
             
             task.assigned_to_id = new_assignee_id
             if new_assignee_id is not None:

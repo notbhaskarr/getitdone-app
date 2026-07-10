@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import './TaskDetailsModal.css';
 import { formatTimestamp, getDeterministicColorIndex } from '../utils/helpers';
@@ -19,6 +19,7 @@ export default function TaskDetailsModal({
   handleReject,
   taskActivities
 }) {
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
   const colors = [
     "162, 178, 150",
     "224, 122, 95",
@@ -152,44 +153,66 @@ export default function TaskDetailsModal({
           </div>
 
           {!isMacEditing && (
-            <div className="task-activity-panel" style={{ marginTop: '24px', paddingBottom: '32px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-h)', marginBottom: '16px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Activity History</h3>
-              {taskActivities[maximizedTask.id] ? (
-                taskActivities[maximizedTask.id].length > 0 ? (
-                  <div className="activity-list">
-                    {taskActivities[maximizedTask.id].map(evt => {
-                      let messageNode;
-                      if (evt.event_type === "ASSIGNED") {
-                        if (evt.details && evt.details.includes("Assigned to peer")) {
-                          const peerId = evt.details.replace("Assigned to peer ", "");
-                          let peerName = "someone";
-                          if (peerId === currentUserId) {
-                            peerName = "you";
+            <div className="task-activity-panel" style={{ marginTop: '16px', paddingBottom: '16px' }}>
+              <div 
+                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: isActivityOpen ? 0.8 : 0.5, transition: 'opacity 0.2s', marginBottom: isActivityOpen ? '16px' : '0' }}
+                onClick={() => setIsActivityOpen(!isActivityOpen)}
+              >
+                <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-h)', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>Activity History</h3>
+                <span style={{ marginLeft: '6px', fontSize: '14px', transform: isActivityOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>⌄</span>
+              </div>
+              
+              {isActivityOpen && (
+                taskActivities[maximizedTask.id] ? (
+                  taskActivities[maximizedTask.id].length > 0 ? (
+                    <div className="activity-list">
+                      {taskActivities[maximizedTask.id].map(evt => {
+                        let messageNode;
+                        if (evt.event_type === "ASSIGNED") {
+                          if (evt.details && evt.details.includes("Assigned to peer")) {
+                            const peerId = evt.details.replace("Assigned to peer ", "");
+                            let peerName = "someone";
+                            if (peerId === currentUserId) {
+                              peerName = "you";
+                            } else {
+                              const peerObj = peers.find(p => p.peer_id === peerId);
+                              if (peerObj) peerName = peerObj.peer_name;
+                            }
+                            messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task to {peerName}.</span>;
+                          } else if (evt.details && evt.details.includes("Assignment revoked from ")) {
+                            const peerId = evt.details.replace("Assignment revoked from ", "");
+                            let peerName = "someone";
+                            if (peerId === currentUserId) {
+                              peerName = "you";
+                            } else {
+                              const peerObj = peers.find(p => p.peer_id === peerId);
+                              if (peerObj) peerName = peerObj.peer_name;
+                            }
+                            messageNode = <span className="activity-message"> - {evt.user_name} <strong>revoked</strong> the assignment from {peerName}.</span>;
+                          } else if (evt.details === "Assignment revoked") {
+                            messageNode = <span className="activity-message"> - {evt.user_name} <strong>revoked</strong> the assignment.</span>;
                           } else {
-                            const peerObj = peers.find(p => p.peer_id === peerId);
-                            if (peerObj) peerName = peerObj.peer_name;
+                            messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task{evt.details ? ` - ${evt.details}` : ''}</span>;
                           }
-                          messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task to {peerName}.</span>;
                         } else {
-                          messageNode = <span className="activity-message"> - {evt.user_name} <strong>assigned</strong> the task{evt.details ? ` - ${evt.details}` : ''}</span>;
+                          const suffix = ['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : (evt.event_type === 'UPDATED' ? ' the task details.' : '');
+                          messageNode = <span className="activity-message"> - {evt.user_name} <strong>{evt.event_type.toLowerCase()}</strong>{suffix}{evt.details && evt.event_type !== 'TIPPED' ? ` - ${evt.details}` : ''}{evt.event_type === 'TIPPED' ? ` ${evt.details.replace('Tipped ', '')}` : ''}</span>;
                         }
-                      } else {
-                        messageNode = <span className="activity-message"> - {evt.user_name} <strong>{evt.event_type.toLowerCase()}</strong>{['REOPENED', 'COMPLETED', 'CREATED', 'REJECTED'].includes(evt.event_type) ? ' the task.' : ''}{evt.details && evt.event_type !== 'TIPPED' ? ` - ${evt.details}` : ''}{evt.event_type === 'TIPPED' ? ` ${evt.details.replace('Tipped ', '')}` : ''}</span>;
-                      }
 
-                      return (
-                        <div key={evt.id} className="activity-item">
-                          <span className="activity-time">{formatTimestamp(evt.created_at)}</span>
-                          {messageNode}
-                        </div>
-                      );
-                    })}
-                  </div>
+                        return (
+                          <div key={evt.id} className="activity-item">
+                            <span className="activity-time">{formatTimestamp(evt.created_at)}</span>
+                            {messageNode}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="activity-empty">No activity recorded.</div>
+                  )
                 ) : (
-                  <div className="activity-empty">No activity recorded.</div>
+                  <div className="activity-loading">Loading...</div>
                 )
-              ) : (
-                <div className="activity-loading">Loading...</div>
               )}
             </div>
           )}
