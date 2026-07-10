@@ -45,8 +45,7 @@ export default function TaskCard({
         transform: isDragged ? 'scale(1.02)' : 'scale(1)'
       }}
       onClick={() => {
-        setMaximizedTask(task);
-        setIsMacEditing(false);
+        setActiveSubtaskTask(task);
       }}
       {...restDragProps}
     >
@@ -56,6 +55,7 @@ export default function TaskCard({
         checked={task.is_completed}
         disabled={(task.assigned_to_id && task.user_id === currentUserId) || loadingTasks.has(task.id)}
         onChange={() => handleToggleComplete(task)}
+        onClick={(e) => e.stopPropagation()}
         style={{ 
           '--progress': task.subtasks && task.subtasks.length > 0 
             ? `${(task.subtasks.filter(st => st.is_completed).length / task.subtasks.length) * 100}%` 
@@ -63,9 +63,7 @@ export default function TaskCard({
         }}
       />
 
-      <div className="task-content" onClick={(e) => {
-        setActiveSubtaskTask(task);
-      }} style={{ cursor: 'pointer' }}>
+      <div className="task-content" style={{ cursor: 'pointer' }}>
         <div className="task-title">{task.title}</div>
         {task.description && <div className="task-desc">{task.description}</div>}
         {task.assigned_to_id && task.user_id === currentUserId && (
