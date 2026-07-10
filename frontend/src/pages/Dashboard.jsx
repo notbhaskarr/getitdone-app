@@ -25,7 +25,8 @@ export default function Dashboard() {
     notifications, setNotifications,
     loadingTasks, setLoadingTasks,
     taskActivities, setTaskActivities,
-    loadData
+    loadData,
+    logoutUser
   } = useAppContext();
 
   const [title, setTitle] = useState("");
@@ -176,8 +177,7 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/");
+    logoutUser();
   };
 
   const handleCreateSubtask = async (e) => {

@@ -3,12 +3,15 @@ import { login } from "../api/auth";
 import { useNavigate, Link } from "react-router-dom";
 import "./Auth.css";
 
+import { useAppContext } from "../context/AppContext";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorField, setErrorField] = useState(null); // 'email', 'password', or 'all'
 
   const navigate = useNavigate();
+  const { loginUser } = useAppContext();
 
   const triggerError = (field) => {
     setErrorField(field);
@@ -35,7 +38,7 @@ export default function LoginPage() {
     try {
       setErrorField(null);
       const data = await login(email, password);
-      localStorage.setItem("token", data.access_token);
+      loginUser(data.access_token);
       navigate("/dashboard");
     } catch (err) {
       triggerError("all");

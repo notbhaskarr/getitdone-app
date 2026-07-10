@@ -18,9 +18,12 @@ export const AppProvider = ({ children }) => {
   const [loadingTasks, setLoadingTasks] = useState(new Set());
   const [taskActivities, setTaskActivities] = useState({});
   
+  const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
+
   const navigate = useNavigate();
 
   const loadData = async () => {
+    if (!authToken) return;
     try {
       const [tasksData, userData, peersData] = await Promise.all([
         getTasks(),
@@ -34,21 +37,39 @@ export const AppProvider = ({ children }) => {
       setPeers(peersData);
     } catch (error) {
       if (error.response?.status === 401) {
-        navigate("/");
+        logoutUser();
       }
     }
   };
 
+  const loginUser = (token) => {
+    localStorage.setItem("token", token);
+    setAuthToken(token);
+  };
+
+  const logoutUser = () => {
+    localStorage.removeItem("token");
+    setAuthToken(null);
+    setTasks([]);
+    setUserName("");
+    setLuffies(0);
+    setCurrentUserId(null);
+    setPeers([]);
+    setOnlinePeers(new Set());
+    setNotifications([]);
+    setTaskActivities({});
+    navigate("/");
+  };
+
   useEffect(() => {
     loadData();
-  }, []);
+  }, [authToken]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!authToken) return;
 
     const baseUrl = import.meta.env.VITE_API_URL || "https://getitdone-app.onrender.com";
-    const wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://") + `/ws/${token}`;
+    const wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://") + `/ws/${authToken}`;
 
     let ws;
     try {
@@ -90,7 +111,7 @@ export const AppProvider = ({ children }) => {
     return () => {
       if (ws) ws.close();
     };
-  }, []);
+  }, [authToken]);
 
   return (
     <AppContext.Provider value={{
@@ -103,7 +124,9 @@ export const AppProvider = ({ children }) => {
       notifications, setNotifications,
       loadingTasks, setLoadingTasks,
       taskActivities, setTaskActivities,
-      loadData
+      loadData,
+      loginUser,
+      logoutUser
     }}>
       {children}
     </AppContext.Provider>
