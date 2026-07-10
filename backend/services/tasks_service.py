@@ -6,7 +6,7 @@ from datetime import datetime
 
 from database import get_db
 from models import User, Task, TaskEvent, Subtask
-from schemas import TaskCreate, TaskUpdate, TaskTipRequest, SubtaskCreate, SubtaskUpdate
+from schemas.tasks import TaskCreate, TaskUpdate, TaskTipRequest, SubtaskCreate, SubtaskUpdate
 from dependencies import get_current_user
 from socket_manager import manager
 

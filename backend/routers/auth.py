@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import User
-from schemas import UserCreate, UserLogin
+from schemas.users import UserCreate, UserLogin
 from dependencies import get_current_user
 from services import users_service
 

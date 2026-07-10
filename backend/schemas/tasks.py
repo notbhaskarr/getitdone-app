@@ -3,53 +3,6 @@ from typing import Optional
 from uuid import UUID
 from datetime import datetime
 
-
-# -------------------
-# AUTH SCHEMAS
-# -------------------
-class UserCreate(BaseModel):
-    name: str
-    email: str
-    password: str
-
-
-class UserRead(BaseModel):
-    id: UUID
-    name: str
-    email: str
-    luffies: int
-    
-    class Config:
-        from_attributes = True
-
-
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-# -------------------
-# PEER SCHEMAS
-# -------------------
-class PeerRequestCreate(BaseModel):
-    email: str
-
-class PeerConnectionRead(BaseModel):
-    id: UUID
-    requester_id: UUID
-    receiver_id: UUID
-    status: str
-    created_at: datetime
-    # We will include basic user info of the peer in the endpoint response directly.
-
-# -------------------
-# TASK SCHEMAS
-# -------------------
 class SubtaskCreate(BaseModel):
     title: str
 

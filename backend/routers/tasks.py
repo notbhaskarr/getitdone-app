@@ -4,7 +4,7 @@ from uuid import UUID
 
 from database import get_db
 from models import User
-from schemas import TaskCreate, TaskUpdate, TaskTipRequest, SubtaskCreate, SubtaskUpdate
+from schemas.tasks import TaskCreate, TaskUpdate, TaskTipRequest, SubtaskCreate, SubtaskUpdate
 from dependencies import get_current_user
 from services import tasks_service
 

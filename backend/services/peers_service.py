@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from uuid import UUID
 from fastapi import HTTPException
 from models import User, PeerConnection
-from schemas import PeerRequestCreate
+from schemas.peers import PeerRequestCreate
 
 def request_peer(db: Session, current_user: User, req: PeerRequestCreate):
     req.email = req.email.strip().lower()

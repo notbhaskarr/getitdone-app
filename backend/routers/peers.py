@@ -4,7 +4,7 @@ from uuid import UUID
 
 from database import get_db
 from models import User
-from schemas import PeerRequestCreate
+from schemas.peers import PeerRequestCreate
 from dependencies import get_current_user
 from services import peers_service
 

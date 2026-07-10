@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from fastapi import HTTPException
 from models import User
-from schemas import UserCreate, UserLogin
+from schemas.users import UserCreate, UserLogin
 from auth import hash_password, verify_password, create_access_token
 
 def signup(db: Session, user: UserCreate):
