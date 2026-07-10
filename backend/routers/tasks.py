@@ -68,9 +68,8 @@ def create_subtask(
 ):
     return tasks_service.create_subtask(task_id, subtask, db, current_user)
 
-@router.put("/tasks/{task_id}/subtasks/{subtask_id}")
+@router.put("/subtasks/{subtask_id}")
 def update_subtask(
-    task_id: UUID,
     subtask_id: UUID,
     subtask_update: SubtaskUpdate,
     db: Session = Depends(get_db),
@@ -78,9 +77,8 @@ def update_subtask(
 ):
     return tasks_service.update_subtask(subtask_id, subtask_update, db, current_user)
 
-@router.delete("/tasks/{task_id}/subtasks/{subtask_id}")
+@router.delete("/subtasks/{subtask_id}")
 def delete_subtask(
-    task_id: UUID,
     subtask_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
