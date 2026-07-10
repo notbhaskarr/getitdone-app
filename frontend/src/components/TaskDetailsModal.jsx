@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import './TaskDetailsModal.css';
 import { formatTimestamp, getDeterministicColorIndex } from '../utils/helpers';
 
 export default function TaskDetailsModal({

@@ -1,0 +1,99 @@
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--accent-border);
+}
+
+.task-checkbox {
+  appearance: none;
+  position: relative;
+  width: 24px;
+  height: 24px;
+  background: rgba(128, 128, 128, 0.05);
+  background-clip: padding-box;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid transparent;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.task-checkbox::before {
+  content: '';
+  position: absolute;
+  top: -1.5px; right: -1.5px; bottom: -1.5px; left: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(rgba(var(--task-color, 170, 59, 255), 1) var(--progress, 0%), rgba(var(--task-color, 170, 59, 255), 0.3) 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.task-checkbox:hover {
+  background: rgba(var(--task-color, 170, 59, 255), 0.1);
+  background-clip: padding-box;
+}
+
+.task-checkbox:hover::before {
+  background: conic-gradient(rgba(var(--task-color, 170, 59, 255), 1) var(--progress, 0%), rgba(var(--task-color, 170, 59, 255), 0.7) 0);
+}
+
+.task-checkbox:checked {
+  background: rgb(var(--task-color, 170, 59, 255));
+  border-color: rgb(var(--task-color, 170, 59, 255));
+  box-shadow: 0 2px 8px rgba(var(--task-color, 170, 59, 255), 0.4);
+}
+
+.task-checkbox:checked::before {
+  display: none;
+}
+
+.task-content {
+  flex-grow: 1;
+}
+
+.task-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 4px;
+  transition: color 0.2s ease;
+}
+
+.task-card.completed {
+  opacity: 0.6;
+}
+
+.task-card.completed .task-title {
+  text-decoration: line-through;
+  color: var(--text);
+}

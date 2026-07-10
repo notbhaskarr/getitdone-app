@@ -1,5 +1,6 @@
 import React from 'react';
 import Calendar from './Calendar';
+import './Sidebar.css';
 
 export default function Sidebar({
   isSidebarOpen,

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import './TaskCard.css';
 import { getDeterministicColorIndex } from '../utils/helpers';
 
 export default function TaskCard({

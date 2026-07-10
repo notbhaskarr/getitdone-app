@@ -1,4 +1,5 @@
 import React from 'react';
+import './NetworkModal.css';
 
 export default function NetworkModal({
   isNetworkModalOpen,
