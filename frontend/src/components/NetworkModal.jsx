@@ -55,7 +55,6 @@ export default function NetworkModal({
                       <div className="peer-status-container" style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
                         {p.status === 'accepted' ? (
                           <>
-                            <span className="peer-status-text" style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 'bold' }}>Accepted</span>
                             <button className="peer-remove-btn" onClick={() => handlePeerRemove(p.id)} title="Remove Peer">✖</button>
                           </>
                         ) : p.is_requester ? (
