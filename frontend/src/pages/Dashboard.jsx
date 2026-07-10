@@ -14,6 +14,7 @@ import TaskCard from "../components/TaskCard";
 import { useAppContext } from "../context/AppContext";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const {
     tasks, setTasks,
     userName,

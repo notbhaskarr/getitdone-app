@@ -44,11 +44,10 @@ def update_task(
 @router.delete("/tasks/{task_id}")
 def delete_task(
     task_id: UUID,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return tasks_service.delete_task(task_id, background_tasks, db, current_user)
+    return tasks_service.delete_task(task_id, db, current_user)
 
 @router.post("/tasks/{task_id}/tip")
 def tip_task(
@@ -64,29 +63,26 @@ def tip_task(
 def create_subtask(
     task_id: UUID,
     subtask: SubtaskCreate,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return tasks_service.create_subtask(task_id, subtask, background_tasks, db, current_user)
+    return tasks_service.create_subtask(task_id, subtask, db, current_user)
 
 @router.put("/tasks/{task_id}/subtasks/{subtask_id}")
 def update_subtask(
     task_id: UUID,
     subtask_id: UUID,
     subtask_update: SubtaskUpdate,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return tasks_service.update_subtask(task_id, subtask_id, subtask_update, background_tasks, db, current_user)
+    return tasks_service.update_subtask(subtask_id, subtask_update, db, current_user)
 
 @router.delete("/tasks/{task_id}/subtasks/{subtask_id}")
 def delete_subtask(
     task_id: UUID,
     subtask_id: UUID,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return tasks_service.delete_subtask(task_id, subtask_id, background_tasks, db, current_user)
+    return tasks_service.delete_subtask(subtask_id, db, current_user)

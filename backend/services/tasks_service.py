@@ -49,8 +49,9 @@ def create_task(
     return new_task
 
 def get_tasks(
-    db: Session ,
-    current_user: User 
+    filter_by: str,
+    db: Session,
+    current_user: User
 ):
     try:
         tasks = db.query(Task).filter(
