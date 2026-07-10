@@ -26,7 +26,8 @@ export default function Dashboard() {
     loadingTasks, setLoadingTasks,
     taskActivities, setTaskActivities,
     loadData,
-    logoutUser
+    logoutUser,
+    archivedTasks
   } = useAppContext();
 
   const [title, setTitle] = useState("");
@@ -532,8 +533,10 @@ export default function Dashboard() {
 
           <div className="task-list">
             {(() => {
+              let unarchivedTasks = tasks.filter(t => !archivedTasks.has(t.id));
+              
               let filteredTasks = selectedDate
-                ? tasks.filter(task => {
+                ? unarchivedTasks.filter(task => {
                   if (!task.created_at) return false;
                   const taskYMD = task.created_at.substring(0, 10);
                   const selY = selectedDate.getFullYear();
@@ -541,7 +544,7 @@ export default function Dashboard() {
                   const selD = String(selectedDate.getDate()).padStart(2, '0');
                   return taskYMD === `${selY}-${selM}-${selD}`;
                 })
-                : [...tasks];
+                : [...unarchivedTasks];
 
               if (taskFilter === 'todo') {
                 filteredTasks = filteredTasks.filter(t => !t.is_completed && (!t.assigned_to_id || t.assigned_to_id === currentUserId));

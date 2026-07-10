@@ -17,6 +17,7 @@ export const AppProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(new Set());
   const [taskActivities, setTaskActivities] = useState({});
+  const [archivedTasks, setArchivedTasks] = useState(new Set());
   
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
 
@@ -35,11 +36,29 @@ export const AppProvider = ({ children }) => {
       setLuffies(userData.luffies || 0);
       setCurrentUserId(userData.id);
       setPeers(peersData);
+
+      const storedArchived = localStorage.getItem('archived_tasks_' + userData.id);
+      if (storedArchived) {
+        setArchivedTasks(new Set(JSON.parse(storedArchived)));
+      } else {
+        setArchivedTasks(new Set());
+      }
     } catch (error) {
       if (error.response?.status === 401) {
         logoutUser();
       }
     }
+  };
+
+  const archiveTask = (taskId) => {
+    setArchivedTasks(prev => {
+      const next = new Set(prev);
+      next.add(taskId);
+      if (currentUserId) {
+        localStorage.setItem('archived_tasks_' + currentUserId, JSON.stringify(Array.from(next)));
+      }
+      return next;
+    });
   };
 
   const loginUser = (token) => {
@@ -58,6 +77,7 @@ export const AppProvider = ({ children }) => {
     setOnlinePeers(new Set());
     setNotifications([]);
     setTaskActivities({});
+    setArchivedTasks(new Set());
     navigate("/");
   };
 
@@ -124,6 +144,8 @@ export const AppProvider = ({ children }) => {
       notifications, setNotifications,
       loadingTasks, setLoadingTasks,
       taskActivities, setTaskActivities,
+      archivedTasks, setArchivedTasks,
+      archiveTask,
       loadData,
       loginUser,
       logoutUser

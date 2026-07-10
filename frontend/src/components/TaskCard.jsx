@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './TaskCard.css';
 import { getDeterministicColorIndex } from '../utils/helpers';
+import { useAppContext } from "../context/AppContext";
 
 export default function TaskCard({
   task,
@@ -17,6 +18,7 @@ export default function TaskCard({
   setIsMacEditing,
   openTipModal
 }) {
+  const { archiveTask } = useAppContext();
   const colors = [
     "162, 178, 150",
     "224, 122, 95",
@@ -61,26 +63,38 @@ export default function TaskCard({
         )}
       </div>
       <div className="task-actions">
-        <button className="icon-btn edit-btn" onClick={(e) => {
-          e.stopPropagation();
-          setMaximizedTask(task);
-          setEditTitle(task.title);
-          setEditDesc(task.description || "");
-          setEditAssigneeId(task.assigned_to_id || "");
+        {task.is_completed ? (
+          <button className="icon-btn edit-btn" onClick={(e) => {
+            e.stopPropagation();
+            archiveTask(task.id);
+          }} title="Remove from View" style={{ opacity: 0.3 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        ) : (
+          <button className="icon-btn edit-btn" onClick={(e) => {
+            e.stopPropagation();
+            setMaximizedTask(task);
+            setEditTitle(task.title);
+            setEditDesc(task.description || "");
+            setEditAssigneeId(task.assigned_to_id || "");
 
-          if (task.due_date) {
-            setEditDueDate(task.due_date.substring(0, 10));
-          } else {
-            setEditDueDate("");
-          }
+            if (task.due_date) {
+              setEditDueDate(task.due_date.substring(0, 10));
+            } else {
+              setEditDueDate("");
+            }
 
-          setIsMacEditing(false);
-        }} title="Edit Task">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', opacity: 0.7 }}>
-            <path d="M12 20h9"></path>
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-          </svg>
-        </button>
+            setIsMacEditing(false);
+          }} title="Edit Task">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', opacity: 0.7 }}>
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+          </button>
+        )}
 
         {task.user_id === currentUserId && task.assigned_to_id && task.is_completed && !task.tipped_amount && (
           <button className="icon-btn edit" onClick={() => openTipModal(task)} title="Send Tip" style={{ color: '#af9f5d' }} disabled={loadingTasks.has(task.id)}>✦</button>
