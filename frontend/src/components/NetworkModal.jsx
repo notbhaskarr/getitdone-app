@@ -58,7 +58,10 @@ export default function NetworkModal({
                             <button className="peer-remove-btn" onClick={() => handlePeerRemove(p.id)} title="Remove Peer">✖</button>
                           </>
                         ) : p.is_requester ? (
-                          <span style={{ fontSize: '12px', opacity: 0.5 }}>Pending</span>
+                          <>
+                            <span className="peer-status-text" style={{ fontSize: '12px', opacity: 0.5 }}>Pending</span>
+                            <button className="peer-remove-btn" onClick={() => handlePeerRemove(p.id)} title="Cancel Request">✖</button>
+                          </>
                         ) : (
                           <button className="icon-btn edit" style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', alignItems: 'center' }} onClick={() => handlePeerAccept(p.id)}>Accept</button>
                         )}
