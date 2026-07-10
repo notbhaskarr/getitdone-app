@@ -11,9 +11,22 @@ import "./Dashboard.css";
 
 import { formatTimestamp, getDeterministicColorIndex } from "../utils/helpers";
 import TaskCard from "../components/TaskCard";
+import { useAppContext } from "../context/AppContext";
 
 export default function Dashboard() {
-  const [tasks, setTasks] = useState([]);
+  const {
+    tasks, setTasks,
+    userName,
+    luffies, setLuffies,
+    currentUserId,
+    peers, setPeers,
+    onlinePeers,
+    notifications, setNotifications,
+    loadingTasks, setLoadingTasks,
+    taskActivities, setTaskActivities,
+    loadData
+  } = useAppContext();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
@@ -23,11 +36,7 @@ export default function Dashboard() {
   const [editDesc, setEditDesc] = useState("");
   const [editAssigneeId, setEditAssigneeId] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
-  const [userName, setUserName] = useState("");
-  const [luffies, setLuffies] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState(null);
 
-  const [peers, setPeers] = useState([]);
   const [isNetworkModalOpen, setIsNetworkModalOpen] = useState(false);
   const [peerEmail, setPeerEmail] = useState("");
   const [requestBtnText, setRequestBtnText] = useState("Request");
@@ -38,14 +47,10 @@ export default function Dashboard() {
   const [isMacEditing, setIsMacEditing] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [taskActivities, setTaskActivities] = useState({});
-  const [loadingTasks, setLoadingTasks] = useState(new Set());
   const [taskFilter, setTaskFilter] = useState('all');
-  const [notifications, setNotifications] = useState([]);
   const [tippingTask, setTippingTask] = useState(null);
   const [tipAmount, setTipAmount] = useState("");
   const [isTippingFlying, setIsTippingFlying] = useState(false);
-  const [onlinePeers, setOnlinePeers] = useState(new Set());
   const [activeSubtaskTask, setActiveSubtaskTask] = useState(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const subtaskModalRef = useRef(null);
@@ -73,83 +78,7 @@ export default function Dashboard() {
         }).catch(err => console.error("Failed to fetch events", err));
       }
     }
-  }, [maximizedTask]);
-
-  const navigate = useNavigate();
-
-  const loadData = async () => {
-    try {
-      const [tasksData, userData, peersData] = await Promise.all([
-        getTasks(),
-        getUserProfile(),
-        getPeers()
-      ]);
-      setTasks(tasksData);
-      setUserName(userData.name);
-      setLuffies(userData.luffies || 0);
-      setCurrentUserId(userData.id);
-      setPeers(peersData);
-    } catch (error) {
-      if (error.response?.status === 401) {
-        navigate("/");
-      }
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    const baseUrl = import.meta.env.VITE_API_URL || "https://getitdone-app.onrender.com";
-    const wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://") + `/ws/${token}`;
-
-    let ws;
-    try {
-      ws = new WebSocket(wsUrl);
-
-      ws.onmessage = (e) => {
-        try {
-          const msg = JSON.parse(e.data);
-          if (msg.type === "online_peers") {
-            setOnlinePeers(new Set(msg.peers));
-          } else if (msg.type === "peer_online") {
-            setOnlinePeers(prev => new Set(prev).add(msg.peer_id));
-          } else if (msg.type === "peer_offline") {
-            setOnlinePeers(prev => {
-              const next = new Set(prev);
-              next.delete(msg.peer_id);
-              return next;
-            });
-          } else if (msg.type === "NOTIFICATION") {
-            const notifId = Date.now();
-            setNotifications(prev => [...prev, { id: notifId, ...msg }]);
-
-            // Auto dismiss after 5s
-            setTimeout(() => {
-              setNotifications(prev => prev.filter(n => n.id !== notifId));
-            }, 5000);
-
-            // Auto refresh state
-            loadData();
-          }
-        } catch (e) {
-          console.error("Failed to parse WS message", e);
-        }
-      };
-
-      ws.onerror = (e) => console.error("WebSocket error", e);
-    } catch (e) {
-      console.error("Failed to setup WebSocket", e);
-    }
-
-    return () => {
-      if (ws) ws.close();
-    };
-  }, []);
+  }, [maximizedTask, taskActivities, setTaskActivities]);
 
   const handleCreate = async (e) => {
     if (e) e.preventDefault();
