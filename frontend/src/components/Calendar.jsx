@@ -56,18 +56,21 @@ export default function Calendar({ tasks, selectedDate, onSelectDate }) {
     "July", "August", "September", "October", "November", "December"];
 
   const days = [];
+  const todayDate = new Date();
+  
   for (let i = 0; i < firstDay; i++) {
     days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
   }
   for (let d = 1; d <= daysInMonth; d++) {
     const thisDate = new Date(year, month, d);
     const isSelected = selectedDate && isSameDay(selectedDate, thisDate);
+    const isToday = isSameDay(todayDate, thisDate);
     const hasTask = hasTaskOnDate(thisDate);
     
     days.push(
       <div 
         key={d} 
-        className={`calendar-day ${isSelected ? 'selected' : ''}`}
+        className={`calendar-day ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
         onClick={() => handleDateClick(d)}
       >
         <span>{d}</span>

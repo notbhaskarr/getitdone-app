@@ -113,3 +113,8 @@
   background: rgba(0, 0, 0, 0.05);
   color: var(--text-h);
 }
+
+.calendar-day.today {
+  font-weight: 900;
+  color: #000;
+}
