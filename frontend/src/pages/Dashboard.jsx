@@ -58,6 +58,39 @@ export default function Dashboard() {
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const subtaskModalRef = useRef(null);
 
+  const [customOrder, setCustomOrder] = useState(null);
+  const [draggedTaskId, setDraggedTaskId] = useState(null);
+
+  const handleDragStart = (e, taskId) => {
+    e.dataTransfer.setData("text/plain", taskId);
+    setDraggedTaskId(taskId);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, targetTaskId, currentSortedIds) => {
+    e.preventDefault();
+    const sourceTaskId = e.dataTransfer.getData("text/plain");
+    if (!sourceTaskId || sourceTaskId === targetTaskId) return;
+
+    const sourceIndex = currentSortedIds.indexOf(sourceTaskId);
+    const targetIndex = currentSortedIds.indexOf(targetTaskId);
+
+    if (sourceIndex > -1 && targetIndex > -1) {
+      const newOrder = [...currentSortedIds];
+      newOrder.splice(sourceIndex, 1);
+      newOrder.splice(targetIndex, 0, sourceTaskId);
+      setCustomOrder(newOrder);
+    }
+    setDraggedTaskId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTaskId(null);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (subtaskModalRef.current && !subtaskModalRef.current.contains(event.target)) {
@@ -554,13 +587,26 @@ export default function Dashboard() {
                 filteredTasks = filteredTasks.filter(t => t.is_completed);
               }
 
-              filteredTasks.sort((a, b) => {
-                if (a.is_completed !== b.is_completed) return a.is_completed ? 1 : -1;
-                if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date);
-                if (a.due_date) return -1;
-                if (b.due_date) return 1;
-                return new Date(b.created_at) - new Date(a.created_at);
-              });
+              if (customOrder) {
+                filteredTasks.sort((a, b) => {
+                  const idxA = customOrder.indexOf(a.id);
+                  const idxB = customOrder.indexOf(b.id);
+                  if (idxA === -1 && idxB === -1) return 0;
+                  if (idxA === -1) return 1;
+                  if (idxB === -1) return -1;
+                  return idxA - idxB;
+                });
+              } else {
+                filteredTasks.sort((a, b) => {
+                  if (a.is_completed !== b.is_completed) return a.is_completed ? 1 : -1;
+                  if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date);
+                  if (a.due_date) return -1;
+                  if (b.due_date) return 1;
+                  return new Date(b.created_at) - new Date(a.created_at);
+                });
+              }
+
+              const currentSortedIds = filteredTasks.map(t => t.id);
 
               if (filteredTasks.length === 0) {
                 return <p style={{ textAlign: "center", color: "var(--text)" }}>{selectedDate ? "No tasks for this date." : "No tasks yet. Create one!"}</p>;
@@ -582,6 +628,14 @@ export default function Dashboard() {
                   setEditDueDate={setEditDueDate}
                   setIsMacEditing={setIsMacEditing}
                   openTipModal={openTipModal}
+                  dragProps={{
+                    draggable: true,
+                    onDragStart: (e) => handleDragStart(e, task.id),
+                    onDragOver: handleDragOver,
+                    onDrop: (e) => handleDrop(e, task.id, currentSortedIds),
+                    onDragEnd: handleDragEnd,
+                    isDragged: draggedTaskId === task.id
+                  }}
                 />
               ));
             })()}

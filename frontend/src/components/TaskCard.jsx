@@ -16,7 +16,8 @@ export default function TaskCard({
   setEditAssigneeId,
   setEditDueDate,
   setIsMacEditing,
-  openTipModal
+  openTipModal,
+  dragProps = {}
 }) {
   const { archiveTask } = useAppContext();
   const colors = [
@@ -30,9 +31,25 @@ export default function TaskCard({
   ];
   const colorIndex = getDeterministicColorIndex(task.id);
   const taskColorRGB = colors[colorIndex % colors.length];
+  
+  const { isDragged, ...restDragProps } = dragProps;
 
   return (
-    <div className={`task-card ${task.is_completed ? 'completed' : ''}`} style={{ '--task-color': taskColorRGB }}>
+    <div 
+      className={`task-card ${task.is_completed ? 'completed' : ''}`} 
+      style={{ 
+        '--task-color': taskColorRGB,
+        opacity: isDragged ? 0.5 : 1,
+        boxShadow: isDragged ? '0 10px 20px rgba(0,0,0,0.2)' : undefined,
+        cursor: restDragProps.draggable ? 'grab' : 'default',
+        transform: isDragged ? 'scale(1.02)' : 'scale(1)'
+      }}
+      onClick={() => {
+        setMaximizedTask(task);
+        setIsMacEditing(false);
+      }}
+      {...restDragProps}
+    >
       <input
         type="checkbox"
         className="task-checkbox"
