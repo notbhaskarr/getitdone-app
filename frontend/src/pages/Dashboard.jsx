@@ -870,25 +870,37 @@ export default function Dashboard() {
                   placeholder="Add details, links, or notes..."
                   rows={5}
                 />
-                <select
-                  className="mac-pill-select"
-                  style={{ marginTop: '24px', width: '250px', display: 'block' }}
-                  value={assigneeId}
-                  onChange={(e) => setAssigneeId(e.target.value)}
-                >
-                  <option value="">Unassigned</option>
-                  {peers.filter(p => p.status === 'accepted').map(p => (
-                    <option key={p.peer_id} value={p.peer_id}>Assign to: {p.peer_name}</option>
-                  ))}
-                </select>
-                <input
-                  type="date"
-                  className="mac-pill-date"
-                  style={{ marginTop: '12px', width: '250px', display: 'block' }}
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
-                />
+              </div>
+
+              <div className="mac-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: '32px', fontSize: '13px', fontFamily: 'var(--sans)', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.7, transition: 'opacity 0.2s', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}>
+                    <span>👤</span>
+                    <select
+                      style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--sans)', padding: 0 }}
+                      value={assigneeId}
+                      onChange={(e) => setAssigneeId(e.target.value)}
+                    >
+                      <option value="">Unassigned</option>
+                      {peers.filter(p => p.status === 'accepted').map(p => (
+                        <option key={p.peer_id} value={p.peer_id}>{p.peer_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.7, transition: 'opacity 0.2s', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}>
+                    <span>Due:</span>
+                    <input
+                      type="date"
+                      style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--sans)', padding: 0 }}
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      onClick={(e) => { try { e.target.showPicker(); } catch(err) {} }}
+                    />
+                  </div>
+                </div>
+                <div style={{ opacity: 0.5, textAlign: 'right' }}>
+                  
+                </div>
               </div>
             </div>
           </div>
