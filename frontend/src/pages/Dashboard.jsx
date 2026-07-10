@@ -57,6 +57,8 @@ export default function Dashboard() {
   const [activeSubtaskTask, setActiveSubtaskTask] = useState(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const subtaskModalRef = useRef(null);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [showMoreTags, setShowMoreTags] = useState(false);
 
   const [customOrder, setCustomOrder] = useState(null);
   const [draggedTaskId, setDraggedTaskId] = useState(null);
@@ -394,6 +396,108 @@ export default function Dashboard() {
     }
   };
 
+  // 1. Base Filter (Date & Status)
+  let baseTasks = tasks.filter(t => !archivedTasks.has(t.id));
+  if (selectedDate) {
+    baseTasks = baseTasks.filter(task => {
+      if (!task.created_at) return false;
+      const taskYMD = task.created_at.substring(0, 10);
+      const selY = selectedDate.getFullYear();
+      const selM = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const selD = String(selectedDate.getDate()).padStart(2, '0');
+      return taskYMD === `${selY}-${selM}-${selD}`;
+    });
+  }
+
+  if (taskFilter === 'todo') {
+    baseTasks = baseTasks.filter(t => !t.is_completed && (!t.assigned_to_id || t.assigned_to_id === currentUserId));
+  } else if (taskFilter === 'delegated') {
+    baseTasks = baseTasks.filter(t => t.user_id === currentUserId && t.assigned_to_id && t.assigned_to_id !== currentUserId);
+  } else if (taskFilter === 'completed') {
+    baseTasks = baseTasks.filter(t => t.is_completed);
+  }
+
+  // 2. Compute Context-Aware Tags
+  const tagCounts = {};
+  const tagColors = {};
+  const taskColorsList = [
+    "162, 178, 150",
+    "224, 122, 95",
+    "61, 90, 128",
+    "129, 178, 154",
+    "242, 204, 143",
+    "212, 163, 115",
+    "157, 129, 137"
+  ];
+
+  baseTasks.forEach(t => {
+    const text = (t.title + " " + (t.description || "")).toLowerCase();
+    const matches = text.match(/(#[a-z0-9_]+)/g) || [];
+    const uniqueMatches = Array.from(new Set(matches));
+    
+    if (uniqueMatches.length > 0) {
+      const colorIndex = getDeterministicColorIndex(t.id);
+      const color = taskColorsList[colorIndex % taskColorsList.length];
+      
+      uniqueMatches.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        if (!tagColors[tag]) {
+          tagColors[tag] = color;
+        }
+      });
+    }
+  });
+
+  const availableTags = Object.keys(tagCounts).sort((a, b) => {
+    if (tagCounts[b] !== tagCounts[a]) {
+      return tagCounts[b] - tagCounts[a]; // Sort by frequency descending
+    }
+    return a.localeCompare(b); // Then alphabetically
+  });
+
+  const tagsToDisplay = [...availableTags];
+  
+  [...selectedTags].reverse().forEach(tag => {
+    const idx = tagsToDisplay.indexOf(tag);
+    if (idx !== -1) {
+      tagsToDisplay.splice(idx, 1);
+    }
+    tagsToDisplay.unshift(tag);
+  });
+
+  const visibleTags = tagsToDisplay.slice(0, 2);
+  const hiddenTags = tagsToDisplay.slice(2);
+
+  // 3. Apply Tag Filter & Sort
+  let finalTasks = [...baseTasks];
+  if (selectedTags.length > 0) {
+    finalTasks = finalTasks.filter(t => {
+      const text = (t.title + " " + (t.description || "")).toLowerCase();
+      return selectedTags.some(tag => text.includes(tag));
+    });
+  }
+
+  if (customOrder) {
+    finalTasks.sort((a, b) => {
+      const idxA = customOrder.indexOf(a.id);
+      const idxB = customOrder.indexOf(b.id);
+      if (idxA === -1 && idxB === -1) return 0;
+      if (idxA === -1) return 1;
+      if (idxB === -1) return -1;
+      return idxA - idxB;
+    });
+  } else {
+    finalTasks.sort((a, b) => {
+      if (a.is_completed !== b.is_completed) return a.is_completed ? 1 : -1;
+      if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date);
+      if (a.due_date) return -1;
+      if (b.due_date) return 1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+  }
+
+  const currentSortedIds = finalTasks.map(t => t.id);
+
   return (
     <div className="dashboard-wrapper">
       <Sidebar 
@@ -441,33 +545,139 @@ export default function Dashboard() {
       </div>
 
 
-      <div style={{ padding: '0 24px', display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-        {['All', 'To Do', 'Delegated', 'Completed'].map(f => {
-          const key = f.toLowerCase().replace(' ', '');
-          const isActive = taskFilter === key;
-          return (
-            <button
-              key={key}
-              onClick={() => setTaskFilter(key)}
-              style={{
-                background: isActive ? 'rgba(253, 246, 227, 0.2)' : 'transparent',
-                border: `1px solid ${isActive ? 'rgba(253, 246, 227, 0.5)' : 'rgba(253, 246, 227, 0.1)'}`,
-                color: isActive ? 'var(--text-h)' : 'var(--text-p)',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                fontSize: '12px',
-                fontWeight: isActive ? '600' : '400',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {f}
-            </button>
-          )
-        })}
+      <div style={{ position: 'relative' }}>
+        <div style={{ padding: '0 24px', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {['All', 'To Do', 'Delegated', 'Completed'].map(f => {
+              const key = f.toLowerCase().replace(' ', '');
+              const isActive = taskFilter === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setTaskFilter(key)}
+                  style={{
+                    background: isActive ? 'rgba(253, 246, 227, 0.2)' : 'transparent',
+                    border: `1px solid ${isActive ? 'rgba(253, 246, 227, 0.5)' : 'rgba(253, 246, 227, 0.1)'}`,
+                    color: isActive ? 'var(--text-h)' : 'var(--text-p)',
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: isActive ? '600' : '400',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    backdropFilter: 'blur(4px)',
+                    WebkitBackdropFilter: 'blur(4px)',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {f}
+                </button>
+              )
+            })}
+          </div>
+
+          {tagsToDisplay.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto', position: 'relative' }}>
+              <div style={{ width: '1px', height: '24px', background: 'var(--border)', flexShrink: 0 }}></div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {visibleTags.map(tag => {
+                  const isActive = selectedTags.includes(tag);
+                  const toggleTag = () => setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+                  const tColor = tagColors[tag] || '170, 59, 255';
+
+                  return (
+                    <button
+                      key={tag}
+                      onClick={toggleTag}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: isActive ? `rgb(${tColor})` : 'var(--text)',
+                        padding: '4px 8px',
+                        fontSize: '13px',
+                        fontWeight: isActive ? '700' : '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        whiteSpace: 'nowrap',
+                        fontFamily: 'var(--mono)'
+                      }}
+                    >
+                      {tag}
+                    </button>
+                  )
+                })}
+              {hiddenTags.length > 0 && !showMoreTags && (
+                <button
+                  onClick={() => setShowMoreTags(true)}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    fontFamily: 'var(--sans)'
+                  }}
+                >
+                  +{hiddenTags.length} more
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Invisible overlay to close tags when clicking outside */}
+        {showMoreTags && (
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9 }}
+            onClick={() => setShowMoreTags(false)}
+          />
+        )}
+
+        {/* Render expanded tags outside the overflow-x container so they don't get clipped */}
+        {showMoreTags && hiddenTags.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            right: '24px', 
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            gap: '8px',
+            zIndex: 10,
+            maxWidth: '400px'
+          }}>
+            {hiddenTags.map(tag => {
+              const isActive = selectedTags.includes(tag);
+              const toggleTag = () => setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+              const tColor = tagColors[tag] || '170, 59, 255';
+              
+              return (
+                <button
+                  key={tag}
+                  onClick={toggleTag}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: isActive ? `rgb(${tColor})` : 'var(--text)',
+                    padding: '4px 8px',
+                    fontSize: '13px',
+                    fontWeight: isActive ? '700' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontFamily: 'var(--mono)',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {tag}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div className="dashboard-layout">
@@ -566,53 +776,11 @@ export default function Dashboard() {
 
           <div className="task-list">
             {(() => {
-              let unarchivedTasks = tasks.filter(t => !archivedTasks.has(t.id));
-              
-              let filteredTasks = selectedDate
-                ? unarchivedTasks.filter(task => {
-                  if (!task.created_at) return false;
-                  const taskYMD = task.created_at.substring(0, 10);
-                  const selY = selectedDate.getFullYear();
-                  const selM = String(selectedDate.getMonth() + 1).padStart(2, '0');
-                  const selD = String(selectedDate.getDate()).padStart(2, '0');
-                  return taskYMD === `${selY}-${selM}-${selD}`;
-                })
-                : [...unarchivedTasks];
-
-              if (taskFilter === 'todo') {
-                filteredTasks = filteredTasks.filter(t => !t.is_completed && (!t.assigned_to_id || t.assigned_to_id === currentUserId));
-              } else if (taskFilter === 'delegated') {
-                filteredTasks = filteredTasks.filter(t => t.user_id === currentUserId && t.assigned_to_id && t.assigned_to_id !== currentUserId);
-              } else if (taskFilter === 'completed') {
-                filteredTasks = filteredTasks.filter(t => t.is_completed);
-              }
-
-              if (customOrder) {
-                filteredTasks.sort((a, b) => {
-                  const idxA = customOrder.indexOf(a.id);
-                  const idxB = customOrder.indexOf(b.id);
-                  if (idxA === -1 && idxB === -1) return 0;
-                  if (idxA === -1) return 1;
-                  if (idxB === -1) return -1;
-                  return idxA - idxB;
-                });
-              } else {
-                filteredTasks.sort((a, b) => {
-                  if (a.is_completed !== b.is_completed) return a.is_completed ? 1 : -1;
-                  if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date);
-                  if (a.due_date) return -1;
-                  if (b.due_date) return 1;
-                  return new Date(b.created_at) - new Date(a.created_at);
-                });
-              }
-
-              const currentSortedIds = filteredTasks.map(t => t.id);
-
-              if (filteredTasks.length === 0) {
+              if (finalTasks.length === 0) {
                 return <p style={{ textAlign: "center", color: "var(--text)" }}>{selectedDate ? "No tasks for this date." : "No tasks yet. Create one!"}</p>;
               }
 
-              return filteredTasks.map((task) => (
+              return finalTasks.map((task) => (
                 <TaskCard
                   key={task.id}
                   task={task}
