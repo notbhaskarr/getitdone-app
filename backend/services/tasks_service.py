@@ -87,6 +87,8 @@ def get_task_events(task_id: UUID, db: Session , current_user: User ):
         
         if e.event_type == "CREATED":
             message = f"{user_name} CREATED the task."
+        elif e.event_type == "UPDATED":
+            message = f"{user_name} UPDATED the task details."
         elif e.event_type == "COMPLETED":
             message = f"{user_name} COMPLETED the task."
         elif e.event_type == "REJECTED":
@@ -143,6 +145,7 @@ def update_task(
     is_assignee = (task.assigned_to_id == current_user.id)
     update_data = update.dict(exclude_unset=True)
 
+    # 1. Handle Rejections (Assignee only)
     if is_assignee and not is_owner and update_data.get("is_rejected"):
         owner = db.query(User).with_for_update().filter(User.id == task.user_id).first()
         if owner:
@@ -159,34 +162,24 @@ def update_task(
         db.refresh(task)
         return task
 
-    if not is_owner:
-        if "is_completed" in update_data and update_data["is_completed"] != task.is_completed:
-            db_current_user = db.query(User).with_for_update().filter(User.id == current_user.id).first()
-            if update_data["is_completed"]:
-                db_current_user.luffies += task.reward_luffies
-                db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="COMPLETED"))
-                background_tasks.add_task(
-                    manager.send_personal_message,
-                    {"type": "NOTIFICATION", "event": "COMPLETED", "actor": current_user.name, "action": "completed your task:", "task_title": task.title, "task_id": str(task.id)},
-                    str(task.user_id)
-                )
-            else:
-                db_current_user.luffies = max(0, db_current_user.luffies - task.reward_luffies)
-                db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="REOPENED"))
-            task.is_completed = update_data["is_completed"]
-        task.updated_at = datetime.utcnow()
-        db.commit()
-        db.refresh(task)
-        return task
+    # 2. Track Details Updates (Title, Description, Due Date)
+    details_updated = False
+    for field in ["title", "description", "due_date"]:
+        if field in update_data and update_data[field] != getattr(task, field):
+            setattr(task, field, update_data[field])
+            details_updated = True
+            
+    if details_updated:
+        db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="UPDATED"))
+        if not is_owner:
+            background_tasks.add_task(
+                manager.send_personal_message,
+                {"type": "NOTIFICATION", "event": "UPDATED", "actor": current_user.name, "action": "updated details for task:", "task_title": task.title, "task_id": str(task.id)},
+                str(task.user_id)
+            )
 
-    if "title" in update_data:
-        task.title = update_data["title"]
-    if "description" in update_data:
-        task.description = update_data["description"]
-    if "due_date" in update_data:
-        task.due_date = update_data["due_date"]
-
-    if "assigned_to_id" in update_data:
+    # 3. Handle Assignments (Owner only)
+    if is_owner and "assigned_to_id" in update_data:
         new_assignee_id = update_data["assigned_to_id"]
         if new_assignee_id != task.assigned_to_id:
             if task.is_completed:
@@ -212,15 +205,26 @@ def update_task(
             if new_assignee_id is not None:
                 db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="ASSIGNED", details=f"Assigned to peer {new_assignee_id}"))
 
+    # 4. Handle Completion (Both)
     if "is_completed" in update_data and update_data["is_completed"] != task.is_completed:
-        if task.assigned_to_id is not None:
+        # If owner is trying to complete an assigned task, that's not allowed
+        if is_owner and task.assigned_to_id is not None:
             raise HTTPException(status_code=400, detail="Cannot complete a task assigned to someone else")
+            
+        db_current_user = db.query(User).with_for_update().filter(User.id == current_user.id).first()
         if update_data["is_completed"]:
-            current_user.luffies += task.reward_luffies
+            db_current_user.luffies += task.reward_luffies
             db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="COMPLETED"))
+            if not is_owner:
+                background_tasks.add_task(
+                    manager.send_personal_message,
+                    {"type": "NOTIFICATION", "event": "COMPLETED", "actor": current_user.name, "action": "completed your task:", "task_title": task.title, "task_id": str(task.id)},
+                    str(task.user_id)
+                )
         else:
-            current_user.luffies = max(0, current_user.luffies - task.reward_luffies)
+            db_current_user.luffies = max(0, db_current_user.luffies - task.reward_luffies)
             db.add(TaskEvent(task_id=task.id, user_id=current_user.id, event_type="REOPENED"))
+            
         task.is_completed = update_data["is_completed"]
 
     task.updated_at = datetime.utcnow()
