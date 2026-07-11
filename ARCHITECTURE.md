@@ -1,58 +1,118 @@
-# GETitDONE - Architecture & Deployment Overview
+# GETitDONE - Codebase Architecture
 
-This document explains the high-level architecture of the **GETitDONE** Todo Application, detailing how the local development environment maps to the live production cloud environment.
-
-## 🏗 System Architecture
-
-The application is split into three completely decoupled tiers:
-1. **Frontend (The UI)**: Built with React and Vite.
-2. **Backend (The Brains)**: Built with Python and FastAPI.
-3. **Database (The Storage)**: Powered by PostgreSQL.
-
-By splitting these up, we ensure that the frontend can be loaded globally at lightning speed, while the backend securely handles the heavy lifting and data processing.
-
----
-
-## ☁️ The Cloud Infrastructure
-
-When moving from a local Mac to the internet, we replaced the local services with three specialized cloud platforms:
-
-### 1. Vercel (The Frontend Host)
-**What it replaces:** Running `npm run dev` in your Mac's terminal.
-**What it does:** 
-Vercel is a global Content Delivery Network (CDN) optimized for React applications. When you push your code to GitHub, Vercel automatically downloads your `frontend` folder, compiles the React code into static HTML, CSS, and JavaScript files, and distributes them to servers all around the world. When a user visits your `.vercel.app` link, the site loads almost instantly because it is being served from a physical server geographically close to them.
-
-### 2. Render.com (The Backend Host)
-**What it replaces:** Running `uvicorn main:app --reload` in your Mac's terminal.
-**What it does:**
-Render is a cloud platform that runs your actual Python code 24/7. It listens to GitHub, downloads your `backend` folder, installs all your Python libraries from `requirements.txt`, and boots up your FastAPI server. It exposes a public URL (`getitdone-app.onrender.com`) that your Vercel frontend can talk to. 
 > [!NOTE]
-> Because we are on the free tier, Render puts the server to "sleep" after 15 minutes of inactivity. This is why the very first login of the day might take 30-50 seconds while the server wakes up.
+> This document explains the internal folder structure, file organization, and modular architecture of the **GETitDONE** application. It details the Tech Stack used and breaks down what each specific file does.
 
-### 3. Neon.tech (The Database)
-**What it replaces:** The local PostgreSQL database running silently in the background of your Mac (via Homebrew).
-**What it does:**
-Neon is a "Serverless PostgreSQL" database. Instead of storing your users and tasks on your Mac's hard drive, Neon stores them securely in the cloud. It provides a Connection String URL (`postgresql://...`) that acts as a secure tunnel. Your Python backend uses this URL to read and write data to Neon.
+## 🛠 Tech Stack
+
+| Layer | Technologies Used | Description |
+|---|---|---|
+| **Frontend** | React (Vite), React Router, Context API | Single-page application built with raw CSS for styling. |
+| **Backend** | Python, FastAPI, SQLAlchemy | High-performance async backend using Router-Service pattern. |
+| **Database** | SQLite (Local) / PostgreSQL (Prod) | Relational database via ORM models. |
+| **Real-time** | FastAPI WebSockets | Pushes instant notifications between peers. |
+
+## 🏗 High-Level Architecture
+
+```mermaid
+graph TD
+    Client[React Frontend] <-->|HTTP REST & WebSockets| API[FastAPI Backend]
+    API <-->|SQLAlchemy ORM| DB[(Database)]
+```
+
+## 📂 Directory Structure
+
+> [!TIP]
+> The project is split into two entirely decoupled services. The `frontend/` handles all UI/UX, while the `backend/` handles data validation and storage.
+
+```text
+todo-app/
+├── frontend/             # The React application (UI)
+│   └── src/
+│       ├── api/          # HTTP request functions to the backend
+│       ├── components/   # Reusable UI components
+│       ├── context/      # Global state management
+│       ├── pages/        # Full screen page views
+│       └── utils/        # Helper functions
+├── backend/              # The FastAPI application (Server/Database)
+│   ├── routers/          # API endpoint controllers
+│   ├── schemas/          # Pydantic data validation models
+│   ├── services/         # Core business logic
+│   └── models.py         # SQLAlchemy database models
+└── ARCHITECTURE.md       # This file!
+```
 
 ---
 
-## 🔄 How They Connect
+## 🖥 Frontend Architecture (`frontend/src/`)
 
-Here is the step-by-step flow of data when a user logs into the app:
+The frontend is a single-page application (SPA). It uses `AppContext` to hold the global state (tasks, peers, Whuffies) so that any component can easily access the data without complex prop drilling.
 
-1. **The User** opens the Vercel URL on their phone. Vercel immediately sends the React website to their browser.
-2. The User types their email and password and clicks "Log In".
-3. **The Frontend (React)** takes that email and password and sends a secure HTTP POST request to your **Render Backend API** (`https://getitdone-app.onrender.com/login`).
-4. **The Backend (FastAPI)** receives the request. It uses the `DATABASE_URL` to securely ask the **Neon Database**: *"Hey, do you have a user with this email, and does the password hash match?"*
-5. **The Database (Neon)** replies to Render: *"Yes, the password matches!"*
-6. **The Backend** generates a secure JWT token and sends it back to the Frontend.
-7. **The Frontend** saves this token and redirects the user to the Dashboard!
+### `/pages/`
+These are the main screen views of the application.
+*   [Dashboard.jsx](file:///Users/test/Projects/todo-app/frontend/src/pages/Dashboard.jsx): The core view of the application. It fetches tasks on load, renders the drag-and-drop columns, handles opening the Task Details modal, and contains the logic for creating new tasks.
+*   [Dashboard.css](file:///Users/test/Projects/todo-app/frontend/src/pages/Dashboard.css): Styling specifically for the Kanban board and drag-and-drop layout.
+*   [LoginPage.jsx](file:///Users/test/Projects/todo-app/frontend/src/pages/LoginPage.jsx) & [SignupPage.jsx](file:///Users/test/Projects/todo-app/frontend/src/pages/SignupPage.jsx): The authentication screens where users enter credentials to receive a JWT token.
+
+### `/context/`
+*   [AppContext.jsx](file:///Users/test/Projects/todo-app/frontend/src/context/AppContext.jsx): The central "brain" of the frontend. It holds all the global variables (e.g., `tasks`, `luffies`, `peers`). It also establishes the global WebSocket connection to the backend so the app can receive real-time notifications.
+
+### `/components/`
+These are reusable modular UI pieces that are injected into the pages.
+*   [TaskCard.jsx](file:///Users/test/Projects/todo-app/frontend/src/components/TaskCard.jsx): The individual card for a task shown in the Kanban columns.
+*   [TaskDetailsModal.jsx](file:///Users/test/Projects/todo-app/frontend/src/components/TaskDetailsModal.jsx): The large overlay modal that appears when you click a task. It has a "Read Mode" (for viewing history and duplicating) and an "Edit Mode" (for modifying data).
+*   [Sidebar.jsx](file:///Users/test/Projects/todo-app/frontend/src/components/Sidebar.jsx): The left-hand navigation panel that contains the "Next Up" list.
+*   [NetworkModal.jsx](file:///Users/test/Projects/todo-app/frontend/src/components/NetworkModal.jsx): The interface where users can search for peers, send requests, and build their network.
+
+### `/api/`
+These files act as the "bridge" to the Python backend. They use `fetch()` to send HTTP requests to the FastAPI endpoints.
+*   [tasks.js](file:///Users/test/Projects/todo-app/frontend/src/api/tasks.js): Functions like `getTasks()`, `createTask()`, `updateTask()`.
+*   [peers.js](file:///Users/test/Projects/todo-app/frontend/src/api/peers.js): Functions like `requestPeer()`, `acceptPeer()`.
 
 ---
 
-## 🚀 How the Data Migration Worked
+## ⚙️ Backend Architecture (`backend/`)
 
-When we deployed the app, your new Neon cloud database was completely empty. To prevent you from losing your existing accounts, we performed a **Database Dump and Restore**:
+> [!IMPORTANT]
+> The backend is structured using the **Router-Service** pattern. This means API routes (URLs) are kept separate from the actual business logic, making the code highly modular.
 
-1. **`pg_dump`**: We ran this tool on your Mac. It literally connected to your local database, read all the rows of data, and wrote them out as standard SQL `INSERT` text commands into a file called `backup.sql`.
-2. **`psql`**: We ran this tool, but pointed it at your Neon database URL. It read the `backup.sql` file line-by-line and executed all those `INSERT` commands on the cloud, perfectly mirroring your local data!
+### Core Files
+*   [main.py](file:///Users/test/Projects/todo-app/backend/main.py): The entry point. Initializes FastAPI, configures CORS, and registers all routers.
+*   [models.py](file:///Users/test/Projects/todo-app/backend/models.py): Defines the SQLAlchemy database tables (`User`, `Task`, `TaskEvent`). This maps Python objects to SQL rows.
+*   [database.py](file:///Users/test/Projects/todo-app/backend/database.py): Sets up the database connection and provides a session to the routes.
+*   [socket_manager.py](file:///Users/test/Projects/todo-app/backend/socket_manager.py): Manages active WebSocket connections to push real-time notifications.
+
+### `/routers/`
+These files define the API endpoints. They receive requests, authenticate the user, and pass data to the services layer.
+*   [tasks.py](file:///Users/test/Projects/todo-app/backend/routers/tasks.py): Endpoints like `GET /tasks` or `POST /tasks`.
+*   [auth.py](file:///Users/test/Projects/todo-app/backend/routers/auth.py): Endpoints for authentication.
+*   [websockets.py](file:///Users/test/Projects/todo-app/backend/routers/websockets.py): The endpoint `ws://.../ws` that the React frontend connects to for real-time updates.
+
+### `/services/`
+This is where the heavy lifting and business logic lives.
+*   [tasks_service.py](file:///Users/test/Projects/todo-app/backend/services/tasks_service.py): Contains the logic for updating tasks, managing Whuffie transfers upon completion, and generating system activity logs.
+
+---
+
+## 🔄 End-to-End Data Flow (Example: Editing a Task)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant React (TaskDetailsModal)
+    participant React (API)
+    participant FastAPI (Router)
+    participant FastAPI (Service)
+    participant Database
+
+    User->>React (TaskDetailsModal): Clicks 'Save'
+    React (TaskDetailsModal)->>React (API): updateTask()
+    React (API)->>FastAPI (Router): PUT /tasks/{id} (JSON)
+    FastAPI (Router)->>FastAPI (Service): Check auth & process
+    FastAPI (Service)->>Database: Update row & generate Activity Log
+    Database-->>FastAPI (Service): Success
+    FastAPI (Service)-->>FastAPI (Router): Task Object
+    FastAPI (Router)-->>React (API): 200 OK (JSON)
+    React (API)-->>React (TaskDetailsModal): Updates local state
+    React (TaskDetailsModal)->>User: Re-renders UI instantly
+```
