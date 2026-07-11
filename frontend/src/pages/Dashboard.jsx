@@ -183,6 +183,15 @@ export default function Dashboard() {
     }
   };
 
+  const handleDuplicateTask = (task) => {
+    setTitle(task.title);
+    setDescription(task.description || '');
+    setAssigneeId(task.assigned_to_id || '');
+    setDueDate(task.due_date ? task.due_date.substring(0, 10) : '');
+    setMaximizedTask(null);
+    setIsCreatingTask(true);
+  };
+
   const handleMacSave = async () => {
     try {
       const formattedDueDate = editDueDate ? new Date(editDueDate).toISOString() : null;
@@ -839,6 +848,7 @@ export default function Dashboard() {
           handleMacSave={handleMacSave}
           handleDelete={handleDelete}
           handleReject={handleReject}
+          handleDuplicateTask={handleDuplicateTask}
           taskActivities={taskActivities}
         />
       )}

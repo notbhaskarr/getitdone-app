@@ -17,6 +17,7 @@ export default function TaskDetailsModal({
   handleMacSave,
   handleDelete,
   handleReject,
+  handleDuplicateTask,
   taskActivities
 }) {
   const [isActivityOpen, setIsActivityOpen] = useState(false);
@@ -41,7 +42,12 @@ export default function TaskDetailsModal({
               <button className="mac-pill-select" style={{ background: 'var(--accent)', color: 'var(--bg)', border: 'none', fontWeight: 600, padding: '6px 16px', height: '32px', display: 'flex', alignItems: 'center' }} onClick={handleMacSave} title="Save">Save</button>
             ) : (
               <>
-                <button className="icon-btn edit" onClick={() => setIsMacEditing(true)} title="Edit">✎</button>
+                <button className="icon-btn edit" onClick={() => setIsMacEditing(true)} title="Edit">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                </button>
+                <button className="icon-btn" onClick={() => handleDuplicateTask(maximizedTask)} title="Duplicate">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
                 <span style={{ fontSize: '13px', opacity: 0.5, fontFamily: 'var(--sans)', marginLeft: '4px' }}>
                   Last modified {formatTimestamp(maximizedTask.updated_at)}
                 </span>
