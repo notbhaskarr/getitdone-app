@@ -92,6 +92,7 @@
   gap: 16px;
   background: var(--bg);
   flex-grow: 1;
+  overflow-y: auto;
 }
 
 .mac-title {
