@@ -11,7 +11,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://letsgetitdone.vercel.app"
+        "https://letsgetitdone.vercel.app",
+        "https://slick.wtf",
     ],
     allow_credentials=True,
     allow_methods=["*"],
