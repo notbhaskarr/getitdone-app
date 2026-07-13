@@ -1,15 +1,8 @@
 {
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/getitdone",
-      "permanent": false
-    }
-  ],
   "rewrites": [
     {
-      "source": "/getitdone/(.*)",
-      "destination": "/index.html"
+      "source": "/demo",
+      "destination": "/demo/index.html"
     },
     {
       "source": "/(.*)",
