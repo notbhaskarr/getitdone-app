@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/getitdone",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/getitdone/(.*)",
